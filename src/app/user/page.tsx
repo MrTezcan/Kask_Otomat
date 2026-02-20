@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -116,7 +116,15 @@ export default function UserDashboard() {
 
     const markAsRead = async (notif: any) => {
         if (!notif.is_read) {
-            const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id)
+            setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n))
+            if (notif.user_id) {
+                await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id)
+            } else {
+                await supabase.from('notification_reads').upsert(
+                    { user_id: userId, notification_id: notif.id },
+                    { onConflict: 'user_id,notification_id' }
+                )
+            }
             if (!error) {
                 setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n))
             }
@@ -144,8 +152,8 @@ export default function UserDashboard() {
             }
         }
 
-        // No deep link: Check heuristics (If titled "Destek" or "YanÄ±t", open support tab)
-        if (notif.title.includes('Destek') || notif.title.includes('YanÄ±t')) {
+        // No deep link: Check heuristics (If titled "Destek" or "Yanıt", open support tab)
+        if (notif.title.includes('Destek') || notif.title.includes('Yanıt')) {
             setSettingsTab('support')
             setShowSettings(true)
             setShowNotifications(false)
@@ -185,7 +193,7 @@ export default function UserDashboard() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2"><span className="text-indigo-100 text-xs font-bold uppercase tracking-widest">{t('wallet')}</span><Wallet className="w-5 h-5 text-indigo-200" /></div>
-                        <h2 className="text-4xl font-black mb-6 tracking-tight">{balance} <span className="text-2xl font-medium opacity-80">â‚º</span></h2>
+                        <h2 className="text-4xl font-black mb-6 tracking-tight">{balance} <span className="text-2xl font-medium opacity-80">₺</span></h2>
                         <div className="flex gap-3"><button onClick={() => router.push('/user/wallet')} className="flex-1 py-3 bg-white/20 backdrop-blur-md rounded-xl text-sm font-bold hover:bg-white/30">+ {t('addBalance')}</button></div>
                     </div>
                 </div>
@@ -226,7 +234,7 @@ export default function UserDashboard() {
                                                 <input value={name} onChange={e => setName(e.target.value)} className="modern-input flex-1" placeholder="Ad Soyad" />
                                                 <button onClick={async () => {
                                                     const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId)
-                                                    if (!error) alert('Profil gÃ¼ncellendi')
+                                                    if (!error) alert('Profil güncellendi')
                                                 }} className="bg-indigo-600 text-white p-3 rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-transform"><Check className="w-5 h-5" /></button>
                                             </div>
                                         </div>
@@ -234,7 +242,7 @@ export default function UserDashboard() {
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                             <label className="text-xs font-bold text-slate-400 uppercase mb-3 block">{t('language')}</label>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <button onClick={() => setLanguage('tr')} className={`py-2 rounded-xl text-sm font-bold ${language === 'tr' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>TÃ¼rkÃ§e</button>
+                                                <button onClick={() => setLanguage('tr')} className={`py-2 rounded-xl text-sm font-bold ${language === 'tr' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>Türkçe</button>
                                                 <button onClick={() => setLanguage('en')} className={`py-2 rounded-xl text-sm font-bold ${language === 'en' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>English</button>
                                             </div>
                                         </div>
@@ -267,7 +275,7 @@ export default function UserDashboard() {
                                 <div className="flex-1 overflow-y-auto space-y-4 p-4 custom-scrollbar">
                                     <div className="flex gap-3">
                                         <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">S</div>
-                                        <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">BaÅŸlangÄ±Ã§ MesajÄ±</p>{selectedTicket.message}</div>
+                                        <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">Başlangıç Mesajı</p>{selectedTicket.message}</div>
                                     </div>
 
                                     {selectedTicket.admin_reply && chatReplies.length === 0 && (
@@ -291,7 +299,7 @@ export default function UserDashboard() {
 
                                 {selectedTicket.status !== 'closed' && (
                                     <div className="p-3 border-t border-slate-100 bg-white"><div className="flex gap-2">
-                                        <input value={chatInput} onChange={e => setChatInput(e.target.value)} className="modern-input flex-1" placeholder="Mesaj yazÄ±n..." />
+                                        <input value={chatInput} onChange={e => setChatInput(e.target.value)} className="modern-input flex-1" placeholder="Mesaj yazın..." />
                                         <button onClick={handleSendReply} className="w-12 h-12 bg-brand-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/30"><Send className="w-5 h-5" /></button>
                                     </div></div>
                                 )}
@@ -309,7 +317,7 @@ export default function UserDashboard() {
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden shrink-0"></div>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-lg text-slate-800">Bildirimler</h3>
-                            {notifications.length > 0 && <button onClick={markAllAsRead} className="text-xs font-bold text-brand-primary">TÃ¼mÃ¼nÃ¼ Okundu Ä°ÅŸaretle</button>}
+                            {notifications.length > 0 && <button onClick={markAllAsRead} className="text-xs font-bold text-brand-primary">Tümünü Okundu İşaretle</button>}
                         </div>
 
                         {!selectedNotification ? (
@@ -317,7 +325,7 @@ export default function UserDashboard() {
                                 {notifications.length === 0 ? (
                                     <div className="text-center py-10 text-slate-400 text-sm flex flex-col items-center">
                                         <Bell className="w-12 h-12 mb-3 opacity-20" />
-                                        <p>HenÃ¼z bildiriminiz yok</p>
+                                        <p>Henüz bildiriminiz yok</p>
                                     </div>
                                 ) : (
                                     notifications.map(n => (
@@ -333,7 +341,7 @@ export default function UserDashboard() {
                             </div>
                         ) : (
                             <div>
-                                <button onClick={() => setSelectedNotification(null)} className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"><ChevronRight className="w-4 h-4 rotate-180" /> Geri DÃ¶n</button>
+                                <button onClick={() => setSelectedNotification(null)} className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"><ChevronRight className="w-4 h-4 rotate-180" /> Geri Dön</button>
                                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                     <h3 className="font-bold text-slate-800 mb-2">{selectedNotification.title}</h3>
                                     <p className="text-sm text-slate-600 whitespace-pre-wrap">{selectedNotification.message}</p>
@@ -371,5 +379,3 @@ export default function UserDashboard() {
         </div>
     )
 }
-
-
