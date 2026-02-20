@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
+  "summary": "Comprehensive guide for deploying the Fresh-Rider web application to Vercel and connecting a custom domain. Covers GitHub repository creation, Vercel project setup, environment variable configuration, and DNS settings.",
+  "updatedAt": "2026-02-07T19:25:23.333880400Z"
+}

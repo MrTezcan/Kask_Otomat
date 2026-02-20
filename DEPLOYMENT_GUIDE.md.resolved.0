@@ -1,0 +1,61 @@
+# Fresh-Rider Web Uygulaması Canlıya Alma Rehberi
+
+Bu rehber, geliştirdiğimiz web uygulamasını (`fresh-rider.com`) dünyaya açmak için yapmanız gereken adımları içerir. En kolay ve profesyonel yöntem **Vercel** kullanmaktır (Next.js'in yaratıcıları).
+
+## 1. Hazırlık (GitHub'a Yükleme)
+
+Öncelikle kodlarımızı bir Git deposuna (Repository) yüklememiz gerekiyor.
+
+1.  **GitHub Hesabı Açın:** [github.com](https://github.com) adresinden ücretsiz hesap oluşturun.
+2.  **Yeni Repo Oluşturun:** Sağ üstteki `+` ikonuna basıp **New Repository** deyin.
+    *   Repository Name: `fresh-rider-web`
+    *   Visibility: **Private** (Tavsiye edilir)
+    *   **Create repository** butonuna basın.
+3.  **Kodu Yükleyin:**
+    *   Bilgisayarınızda `web-app` klasöründe terminali açın.
+    *   Sırasıyla şu komutları yazın (GitHub'ın size verdiği linki kullanın):
+    ```bash
+    git init
+    git add .
+    git commit -m "Fresh-Rider V1"
+    git branch -M main
+    git remote add origin https://github.com/KULLANICI_ADINIZ/fresh-rider-web.git
+    git push -u origin main
+    ```
+
+## 2. Vercel Kurulumu (Yayınlama)
+
+1.  [vercel.com](https://vercel.com) adresine gidin ve **GitHub hesabınızla** giriş yapın.
+2.  **Add New > Project** butonuna tıklayın.
+3.  Listede `fresh-rider-web` projesini göreceksiniz, yanındaki **Import** butonuna basın.
+4.  **Configure Project** ekranında:
+    *   **Environment Variables** kısmını açın.
+    *   Buraya [.env.local](file:///C:/Users/PC/.gemini/antigravity/brain/5487fdf0-0c31-47e4-a90f-4cd3d9f32d01/Kask_Otomat_Tezcan/web-app/.env.local) dosyanızdaki bilgileri ekleyin:
+        *   `NEXT_PUBLIC_SUPABASE_URL`: (Supabase adresiniz)
+        *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: (Supabase anon key)
+5.  **Deploy** butonuna basın.
+
+Bir-iki dakika içinde uygulamanız `fresh-rider-web.vercel.app` gibi bir adreste canlıya çıkacak! 🎉
+
+## 3. Alan Adı (Domain) Bağlama
+
+`fresh-rider.com` adresini bu projeye bağlamak için:
+
+1.  Vercel'de projenizin sayfasına gidin.
+2.  **Settings > Domains** sekmesine tıklayın.
+3.  Kutucuğa `fresh-rider.com` yazıp **Add** deyin.
+4.  Vercel size bazı **DNS Kayıtları** (A Record veya CNAME) verecek.
+5.  Alan adını satın aldığınız yerin (GoDaddy, Google Domains, Natro vb.) paneline gidip bu kayıtları girin.
+
+Genellikle 1 saat içinde alan adınız aktif olur.
+
+## 4. Supabase Ayarı (Önemli!)
+
+Uygulama artık `localhost`'ta değil, `fresh-rider.com`'da çalışacağı için Supabase'e bunu söylemeliyiz.
+
+1.  **Supabase Paneli > Authentication > URL Configuration** kısmına gidin.
+2.  **Site URL** kısmına: `https://fresh-rider.com` yazın.
+3.  **Redirect URLs** kısmına da `https://fresh-rider.com/**` ekleyin.
+4.  Kaydedin.
+
+Artık sisteminiz tamamen canlı ve global olarak erişilebilir durumda! 🚀
