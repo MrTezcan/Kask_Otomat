@@ -125,9 +125,6 @@ export default function UserDashboard() {
                     { onConflict: 'user_id,notification_id' }
                 )
             }
-            if (!error) {
-                setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n))
-            }
         }
 
         // Deep linking logic
