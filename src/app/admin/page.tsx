@@ -253,7 +253,7 @@ export default function AdminDashboard() {
         if (!selectedCustomer || !balanceAmount) return
         const amt = balanceOperation === 'add' ? parseInt(balanceAmount) : -parseInt(balanceAmount)
         const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.rpc('increment_balance', { user_id: selectedCustomer.id, amount: amt, admin_id: user?.id, p_payment_method: 'manual' })
+        const { error } = await supabase.rpc('increment_balance', { user_id: selectedCustomer.id, amount: amt, admin_id: user?.id, p_payment_method: 'admin_manual' })
         if (error) alert('Hata: ' + error.message)
         else { alert('Bakiye guncellendi'); setShowBalanceModal(false); setBalanceAmount(''); fetchCustomers(); fetchTransactions() }
     }
@@ -778,5 +778,6 @@ export default function AdminDashboard() {
         </div>
     )
 }
+
 
 
