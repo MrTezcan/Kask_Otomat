@@ -47,7 +47,7 @@ export default function UserDashboard() {
     }
     const kiosks = devices.map((device, index) => {
         const lat = device.latitude || (41.0082 + (index * 0.005)); const lng = device.longitude || (28.9784 + (index * 0.005))
-        return { id: device.id, name: device.name, lat, lng, status: device.status, distance: calculateDistance(userLocation[0], userLocation[1], lat, lng) }
+        return { id: device.id, name: device.name, lat, lng, status: device.status, distance: userLocation ? calculateDistance(userLocation[0], userLocation[1], lat, lng) : 0 }
     })
 
     useEffect(() => {
@@ -387,5 +387,6 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
