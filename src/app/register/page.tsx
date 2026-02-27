@@ -100,7 +100,7 @@ export default function Register() {
                             <input
                                 name="fullName"
                                 required
-                                className="glass-input w-full pl-9 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
+                                className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
                                 placeholder="Örn: Ahmet Yılmaz"
                                 onChange={handleChange}
                             />
@@ -118,7 +118,7 @@ export default function Register() {
                                 type="tel"
                                 required
                                 placeholder="0555 123 45 67"
-                                className="glass-input w-full pl-9 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
+                                className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
                                 onChange={handleChange}
                             />
                         </div>
@@ -135,7 +135,7 @@ export default function Register() {
                                 type="email"
                                 required
                                 placeholder="ornek@mail.com"
-                                className="glass-input w-full pl-9 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
+                                className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
                                 onChange={handleChange}
                             />
                         </div>
@@ -152,7 +152,7 @@ export default function Register() {
                                 type="password"
                                 required
                                 placeholder="En az 6 karakter"
-                                className="glass-input w-full pl-9 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
+                                className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600"
                                 onChange={handleChange}
                             />
                         </div>
@@ -177,3 +177,4 @@ export default function Register() {
         </main>
     )
 }
+
