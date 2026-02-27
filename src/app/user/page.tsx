@@ -53,7 +53,18 @@ export default function UserDashboard() {
     useEffect(() => {
         fetchProfile(); fetchDevices()
         const sub = supabase.channel('user-bal').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => setBalance(payload.new.balance)).subscribe()
-        if ('geolocation' in navigator) navigator.geolocation.watchPosition((pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]), (err) => console.log(err), { enableHighAccuracy: true })
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+                (err) => { console.log('Location error:', err); /* keep default location 41.0082, 28.9784 */ },
+                { enableHighAccuracy: true, timeout: 5000 }
+            )
+            navigator.geolocation.watchPosition(
+                (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+                (err) => console.log(err),
+                { enableHighAccuracy: true }
+            )
+        }
         return () => { supabase.removeChannel(sub) }
     }, [])
 
@@ -376,4 +387,5 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
