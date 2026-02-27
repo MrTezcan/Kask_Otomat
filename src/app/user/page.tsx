@@ -20,7 +20,7 @@ export default function UserDashboard() {
     const { t, language, setLanguage } = useLanguage()
 
     // ... (Existing State)
-    const [activeTab, setActiveTab] = useState<'home'|'map'>('home'); console.log('ACTIVE_TAB_CURRENT:', activeTab);
+    const [activeTab, setActiveTab] = useState<'home'|'map'>('home')
     const [showQrModal, setShowQrModal] = useState(false)
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [paymentProcessing, setPaymentProcessing] = useState(false)
@@ -481,6 +481,7 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
 
