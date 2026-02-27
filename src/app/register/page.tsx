@@ -28,7 +28,17 @@ export default function Register() {
         setLoading(true)
         setError(null)
 
+
+        // Check email uniqueness directly from auth.users via RPC
+        const { data: isEmailUnique, error: emailCheckError } = await supabase.rpc('check_email_unique', { email_address: formData.email })
+        if (emailCheckError || isEmailUnique === false) {
+            setError('Bu e-posta adresi zaten kullanýmda.')
+            setLoading(false)
+            return
+        }
+
         // Check phone uniqueness
+
         const { data: isPhoneUnique, error: phoneCheckError } = await supabase.rpc('check_phone_unique', { phone_number: formData.phone })
         if (phoneCheckError || isPhoneUnique === false) {
             setError('Bu telefon numarasý zaten kullanýmda.')
@@ -185,5 +195,6 @@ export default function Register() {
         </main>
     )
 }
+
 
 
