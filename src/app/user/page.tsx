@@ -454,12 +454,12 @@ export default function UserDashboard() {
             {/* === Bottom Navigation === */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 pb-safe pt-2 px-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-[9999]" style={{ zIndex: 9999 }}>
                 <div className="flex justify-between items-end pb-2">
-                    <button className="flex flex-col items-center gap-1 p-2 text-indigo-600 w-16">
+                    <button className={lex flex-col items-center gap-1 p-2 w-16 } onClick={() => setActiveTab('home')}>
                         <div className="w-12 h-0.5 bg-indigo-600 rounded-full mb-1"></div>
                         <Activity className="w-6 h-6" />
                         <span className="text-[10px] font-bold">Ana Sayfa</span>
                     </button>
-                    <button className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-indigo-600 w-16 transition-colors" onClick={() => { document.querySelector('main')?.scrollTo({ top: 500, behavior: 'smooth' }) }}>
+                    <button className={lex flex-col items-center gap-1 p-2 w-16 transition-colors } onClick={() => setActiveTab('map')}>
                         <MapPin className="w-6 h-6" />
                         <span className="text-[10px] font-medium">Harita</span>
                     </button>
@@ -477,6 +477,7 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
 
