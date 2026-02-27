@@ -28,7 +28,15 @@ export default function Register() {
         setLoading(true)
         setError(null)
 
-        const { data, error } = await supabase.auth.signUp({
+        // Check phone uniqueness
+        const { data: isPhoneUnique, error: phoneCheckError } = await supabase.rpc('check_phone_unique', { phone_number: formData.phone })
+        if (phoneCheckError || isPhoneUnique === false) {
+            setError('Bu telefon numarasý zaten kullanýmda.')
+            setLoading(false)
+            return
+        }
+
+        const { data, error }
             email: formData.email,
             password: formData.password,
             options: {
@@ -177,4 +185,5 @@ export default function Register() {
         </main>
     )
 }
+
 
