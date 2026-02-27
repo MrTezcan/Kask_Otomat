@@ -251,12 +251,11 @@ export default function UserDashboard() {
             </header>
 
             <main className="px-6 space-y-6 mt-2">
-                {/* Balance Card code from previous file... keeping concise here effectively same */}
                 <div className="w-full p-6 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2"><span className="text-indigo-100 text-xs font-bold uppercase tracking-widest">{t('wallet')}</span><Wallet className="w-5 h-5 text-indigo-200" /></div>
-                        <h2 className="text-4xl font-black mb-6 tracking-tight">{balance} <span className="text-2xl font-medium opacity-80">₺</span></h2>
+                        <h2 className="text-4xl font-black mb-6 tracking-tight">{balance} <span className="text-2xl font-medium opacity-80">?</span></h2>
                         <div className="flex gap-3"><button onClick={() => router.push('/user/wallet')} className="flex-1 py-3 bg-white/20 backdrop-blur-md rounded-xl text-sm font-bold hover:bg-white/30">+ {t('addBalance')}</button></div>
                     </div>
                 </div>
@@ -490,6 +489,7 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
 
