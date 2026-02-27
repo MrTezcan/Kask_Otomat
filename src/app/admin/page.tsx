@@ -287,7 +287,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
-            <aside className="w-full md:w-64 h-16 md:h-full bg-white border-b md:border-r border-slate-200 flex flex-row md:flex-col z-20 shadow-sm relative overflow-x-auto md:overflow-x-visible shrink-0">
+            <aside className="w-full md:w-64 h-16 md:h-full bg-white border-b md:border-r border-slate-200 flex flex-row md:flex-col z-20 shadow-sm relative overflow-x-auto md:overflow-x-visible shrink-0 no-scrollbar custom-scrollbar-hide">
                 <div className="md:h-20 h-full flex items-center px-4 md:px-6 border-r md:border-b md:border-r-0 border-slate-100 shrink-0"><Logo size="small" /></div>
                 <nav className="flex-1 p-2 md:p-4 md:space-y-1 overflow-x-auto md:overflow-x-transparent flex flex-row md:flex-col items-center md:items-stretch gap-2 md:gap-0 no-scrollbar">
                     <SidebarItem icon={LayoutDashboard} label="Genel Bakis" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
@@ -778,4 +778,5 @@ export default function AdminDashboard() {
         </div>
     )
 }
+
 
