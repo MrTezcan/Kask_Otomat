@@ -23,6 +23,7 @@ export default function UserDashboard() {
     const [showQrModal, setShowQrModal] = useState(false)
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [paymentProcessing, setPaymentProcessing] = useState(false)
+    const [newPassword, setNewPassword] = useState('')
     const [balance, setBalance] = useState(0)
     const [name, setName] = useState('')
     const [userId, setUserId] = useState<string | null>(null)
@@ -161,6 +162,20 @@ export default function UserDashboard() {
         const { data: { user } } = await supabase.auth.getUser()
         const { error } = await supabase.from('ticket_replies').insert({ ticket_id: selectedTicket.id, user_id: user?.id, message: chatInput, is_admin: false })
         if (!error) { setChatInput(''); fetchReplies(selectedTicket.id) }
+    }
+
+    
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (newPassword.length < 6) return alert('Þifre en az 6 karakter olmalýdýr.')
+        
+        const { error } = await supabase.auth.updateUser({ password: newPassword })
+        if (error) {
+            alert('Þifre güncellenirken hata oluþtu: ' + error.message)
+        } else {
+            alert('Þifreniz baþarýyla güncellendi.')
+            setNewPassword('')
+        }
     }
 
     const handleLogout = async () => { await supabase.auth.signOut(); router.push('/') }
@@ -462,6 +477,7 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
 
