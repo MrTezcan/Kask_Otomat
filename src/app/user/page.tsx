@@ -253,7 +253,7 @@ export default function UserDashboard() {
 
             
             {showQrModal && (
-                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4">
+                <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQrModal(false)}></div>
                     <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 animate-fade-in-up">
                         <div className="flex justify-between items-center mb-6">
@@ -288,7 +288,7 @@ export default function UserDashboard() {
 
             {/* Modal: Settings & Support */}
             {showSettings && (
-                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4">
+                <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
                     <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col">
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden shrink-0"></div>
@@ -462,6 +462,7 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
 
