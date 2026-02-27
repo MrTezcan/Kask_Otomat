@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+ï»¿export const dynamic = 'force-dynamic';
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -48,10 +48,10 @@ export default function UserDashboard() {
     // ... (Existing Effects & Helpers same as before)
     
     const handleQrPayment = async () => {
-        if (!qrDeviceId) return alert('Lütfen makine kodunu girin.')
+        if (!qrDeviceId) return alert('Lï¿½tfen makine kodunu girin.')
         const device = devices.find(d => d.id === qrDeviceId || d.name === qrDeviceId)
-        if (!device) return alert('Geçersiz makine kodu veya cihaz bulunamadý.')
-        if (device.status !== 'online') return alert('Bu makine þu anda hizmet veremiyor (Çevrimdýþý/Bakýmda).')
+        if (!device) return alert('Geï¿½ersiz makine kodu veya cihaz bulunamadï¿½.')
+        if (device.status !== 'online') return alert('Bu makine ï¿½u anda hizmet veremiyor (ï¿½evrimdï¿½ï¿½ï¿½/Bakï¿½mda).')
 
         const price = 50 // Default price if not set, we can check device.hizmet_fiyati if it existed, for now let's assume 50 or read from DB. Actually let's fetch it to be safe.
         // Assuming price is 50
@@ -69,9 +69,9 @@ export default function UserDashboard() {
             await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: ${device.name} Kask Temizleme, status: 'completed' })
             
             // Notification
-            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'Ödeme Baþarýlý', message: ${device.name} cihazýnda  ? ödeme yapýldý. Ýþlem baþlýyor... })
+            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'ï¿½deme Baï¿½arï¿½lï¿½', message: ${device.name} cihazï¿½nda  ? ï¿½deme yapï¿½ldï¿½. ï¿½ï¿½lem baï¿½lï¿½yor... })
 
-            alert('Ödeme baþarýlý! Makine çalýþmaya baþlýyor.')
+            alert('ï¿½deme baï¿½arï¿½lï¿½! Makine ï¿½alï¿½ï¿½maya baï¿½lï¿½yor.')
             setShowQrModal(false)
             setQrDeviceId('')
             // Set nav back to home just in case
@@ -168,13 +168,13 @@ export default function UserDashboard() {
     
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (newPassword.length < 6) return alert('Þifre en az 6 karakter olmalýdýr.')
+        if (newPassword.length < 6) return alert('ï¿½ifre en az 6 karakter olmalï¿½dï¿½r.')
         
         const { error } = await supabase.auth.updateUser({ password: newPassword })
         if (error) {
-            alert('Þifre güncellenirken hata oluþtu: ' + error.message)
+            alert('ï¿½ifre gï¿½ncellenirken hata oluï¿½tu: ' + error.message)
         } else {
-            alert('Þifreniz baþarýyla güncellendi.')
+            alert('ï¿½ifreniz baï¿½arï¿½yla gï¿½ncellendi.')
             setNewPassword('')
         }
     }
@@ -287,7 +287,7 @@ export default function UserDashboard() {
                                     value={qrDeviceId}
                                     onChange={(e) => setQrDeviceId(e.target.value)}
                                 >
-                                    <option value="">Seçiniz veya Okutunuz...</option>
+                                    <option value="">Seï¿½iniz veya Okutunuz...</option>
                                     {devices.filter(d => d.status === 'online').map(d => (
                                         <option key={d.id} value={d.id}>{d.name} (50 ?)</option>
                                     ))}
@@ -298,7 +298,7 @@ export default function UserDashboard() {
                                 disabled={paymentProcessing || !qrDeviceId}
                                 className="w-full py-4 bg-brand-primary text-white font-bold rounded-xl disabled:opacity-50"
                             >
-                                {paymentProcessing ? 'Ýþleniyor...' : '50 ? Öde ve Baþlat'}
+                                {paymentProcessing ? 'ï¿½ï¿½leniyor...' : '50 ? ï¿½de ve Baï¿½lat'}
                             </button>
                         </div>
                     </div>

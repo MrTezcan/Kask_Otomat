@@ -1,4 +1,4 @@
-'use client'
+ï»¿'use client'
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -32,7 +32,7 @@ export default function Register() {
         // Check email uniqueness directly from auth.users via RPC
         const { data: isEmailUnique, error: emailCheckError } = await supabase.rpc('check_email_unique', { email_address: formData.email })
         if (emailCheckError || isEmailUnique === false) {
-            setError('Bu e-posta adresi zaten kullanýmda.')
+            setError('Bu e-posta adresi zaten kullanï¿½mda.')
             setLoading(false)
             return
         }
@@ -41,7 +41,7 @@ export default function Register() {
 
         const { data: isPhoneUnique, error: phoneCheckError } = await supabase.rpc('check_phone_unique', { phone_number: formData.phone })
         if (phoneCheckError || isPhoneUnique === false) {
-            setError('Bu telefon numarasý zaten kullanýmda.')
+            setError('Bu telefon numarasï¿½ zaten kullanï¿½mda.')
             setLoading(false)
             return
         }
