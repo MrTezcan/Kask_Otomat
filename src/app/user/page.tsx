@@ -20,7 +20,7 @@ export default function UserDashboard() {
     const { t, language, setLanguage } = useLanguage()
 
     // ... (Existing State)
-    const [activeTab, setActiveTab] = useState<'home'|'map'>('home')
+    const [activeTab, setActiveTab] = useState<'home'|'map'>('home'); console.log('ACTIVE_TAB_CURRENT:', activeTab);
     const [showQrModal, setShowQrModal] = useState(false)
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [paymentProcessing, setPaymentProcessing] = useState(false)
@@ -251,7 +251,7 @@ export default function UserDashboard() {
                 </div>
             </header>
 
-            <main className="px-6 space-y-6 mt-2">
+            <main className="px-6 space-y-6 mt-2 relative z-10">
                 <div className="w-full p-6 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div className="relative z-10">
@@ -262,20 +262,11 @@ export default function UserDashboard() {
                 </div>
 
                 {activeTab === 'map' ? (
-                    <div className="h-[60vh] rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 relative animate-fade-in-up">
+                    <div className="h-[60vh] rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 relative animate-fade-in-up mt-4">
                         <KioskMap userLocation={userLocation} kiosks={kiosks} />
                     </div>
                 ) : (
-                    <div className="w-full bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[40vh] animate-fade-in-up">
-                        <div className="w-20 h-20 bg-brand-primary/10 text-brand-primary rounded-full flex items-center justify-center mb-6">
-                            <QrCode className="w-10 h-10" />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2 text-center">QR Ödeme</h3>
-                        <p className="text-slate-500 text-center text-sm mb-6 max-w-[250px]">Kask otomatýnýn üzerindeki QR kodu okutun veya makine kodunu girerek ödemenizi yapýn.</p>
-                        <button onClick={() => setShowQrModal(true)} className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                            <QrCode className="w-5 h-5" /> Kod Girerek Öde
-                        </button>
-                    </div>
+                    <QrScannerCard onScan={() => setShowQrModal(true)} />
                 )}
             </main>
 
@@ -490,6 +481,8 @@ export default function UserDashboard() {
         </div>
     )
 }
+
+
 
 
 
