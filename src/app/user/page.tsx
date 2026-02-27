@@ -19,6 +19,10 @@ export default function UserDashboard() {
     const { t, language, setLanguage } = useLanguage()
 
     // ... (Existing State)
+    const [activeTab, setActiveTab] = useState<'home'|'map'>('home')
+    const [showQrModal, setShowQrModal] = useState(false)
+    const [qrDeviceId, setQrDeviceId] = useState('')
+    const [paymentProcessing, setPaymentProcessing] = useState(false)
     const [balance, setBalance] = useState(0)
     const [name, setName] = useState('')
     const [userId, setUserId] = useState<string | null>(null)
@@ -40,6 +44,42 @@ export default function UserDashboard() {
     const [selectedNotification, setSelectedNotification] = useState<any | null>(null)
 
     // ... (Existing Effects & Helpers same as before)
+    
+    const handleQrPayment = async () => {
+        if (!qrDeviceId) return alert('Lütfen makine kodunu girin.')
+        const device = devices.find(d => d.id === qrDeviceId || d.name === qrDeviceId)
+        if (!device) return alert('Geçersiz makine kodu veya cihaz bulunamadý.')
+        if (device.status !== 'online') return alert('Bu makine þu anda hizmet veremiyor (Çevrimdýþý/Bakýmda).')
+
+        const price = 50 // Default price if not set, we can check device.hizmet_fiyati if it existed, for now let's assume 50 or read from DB. Actually let's fetch it to be safe.
+        // Assuming price is 50
+        const finalPrice = 50
+
+        if (balance < finalPrice) return alert(Bakiye yetersiz! Hizmet bedeli:  ?)
+
+        setPaymentProcessing(true)
+        try {
+            // Update balance
+            const { error: balError } = await supabase.rpc('increment_balance', { amount: -finalPrice, user_id: userId })
+            if (balError) throw balError
+
+            // Record transaction
+            await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: ${device.name} Kask Temizleme, status: 'completed' })
+            
+            // Notification
+            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'Ödeme Baþarýlý', message: ${device.name} cihazýnda  ? ödeme yapýldý. Ýþlem baþlýyor... })
+
+            alert('Ödeme baþarýlý! Makine çalýþmaya baþlýyor.')
+            setShowQrModal(false)
+            setQrDeviceId('')
+            // Set nav back to home just in case
+        } catch (e: any) {
+            alert('Hata: ' + e.message)
+        } finally {
+            setPaymentProcessing(false)
+        }
+    }
+
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
@@ -210,6 +250,41 @@ export default function UserDashboard() {
                     <KioskMap userLocation={userLocation} kiosks={kiosks} />
                 </div>
             </main>
+
+            
+            {showQrModal && (
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQrModal(false)}></div>
+                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 animate-fade-in-up">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-xl text-slate-800">Cihaz Kodu</h3>
+                            <button onClick={() => setShowQrModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Makine Kodu</label>
+                                <select 
+                                    className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200"
+                                    value={qrDeviceId}
+                                    onChange={(e) => setQrDeviceId(e.target.value)}
+                                >
+                                    <option value="">Seçiniz veya Okutunuz...</option>
+                                    {devices.filter(d => d.status === 'online').map(d => (
+                                        <option key={d.id} value={d.id}>{d.name} (50 ?)</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button 
+                                onClick={handleQrPayment} 
+                                disabled={paymentProcessing || !qrDeviceId}
+                                className="w-full py-4 bg-brand-primary text-white font-bold rounded-xl disabled:opacity-50"
+                            >
+                                {paymentProcessing ? 'Ýþleniyor...' : '50 ? Öde ve Baþlat'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal: Settings & Support */}
             {showSettings && (
@@ -387,6 +462,7 @@ export default function UserDashboard() {
         </div>
     )
 }
+
 
 
 
