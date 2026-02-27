@@ -27,7 +27,7 @@ function StatCard({ title, value, icon, color }: { title: string, value: number,
 
 function SidebarItem({ icon: Icon, label, active, onClick }: { icon: any, label: string, active: boolean, onClick: () => void }) {
     return (
-        <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${active ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+        <button onClick={onClick} className={`shrink-0 md:w-full flex items-center gap-3 px-3 py-2 md:px-4 md:py-3 rounded-xl text-sm font-bold transition-all ${active ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <Icon className="w-5 h-5" />{label}
         </button>
     )
@@ -286,10 +286,10 @@ export default function AdminDashboard() {
     if (!adminName) return null
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
-            <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col z-20 shadow-sm relative">
-                <div className="h-20 flex items-center px-6 border-b border-slate-50"><Logo size="small" /></div>
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+            <aside className="w-full md:w-64 h-16 md:h-full bg-white border-b md:border-r border-slate-200 flex flex-row md:flex-col z-20 shadow-sm relative overflow-x-auto md:overflow-x-visible shrink-0">
+                <div className="md:h-20 h-full flex items-center px-4 md:px-6 border-r md:border-b md:border-r-0 border-slate-100 shrink-0"><Logo size="small" /></div>
+                <nav className="flex-1 p-2 md:p-4 md:space-y-1 overflow-x-auto md:overflow-x-transparent flex flex-row md:flex-col items-center md:items-stretch gap-2 md:gap-0 no-scrollbar">
                     <SidebarItem icon={LayoutDashboard} label="Genel Bakis" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
                     <SidebarItem icon={Server} label="Cihaz Yonetimi" active={activeTab === 'devices'} onClick={() => setActiveTab('devices')} />
                     <SidebarItem icon={Users} label="Musteriler" active={activeTab === 'customers'} onClick={() => setActiveTab('customers')} />
@@ -778,3 +778,4 @@ export default function AdminDashboard() {
         </div>
     )
 }
+
