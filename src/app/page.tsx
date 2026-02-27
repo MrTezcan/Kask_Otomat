@@ -1,4 +1,4 @@
-ï»¿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +18,13 @@ export default function Home() {
 
     // Load saved credentials on mount
     useEffect(() => {
+        const savedEmail = localStorage.getItem('rememberedEmail');
+        const savedPassword = localStorage.getItem('rememberedPassword');
+        if (savedEmail && savedPassword) {
+            setEmail(savedEmail);
+            setPassword(savedPassword);
+            setRememberMe(true);
+        }
         const savedEmail = localStorage.getItem('rememberedEmail')
         const savedPassword = localStorage.getItem('rememberedPassword')
         if (savedEmail && savedPassword) {
@@ -69,7 +76,7 @@ export default function Home() {
     return (
         <main className="flex min-h-screen flex-col items-center justify-center p-6 relative overflow-hidden">
 
-            {/* Arkaplan Efektleri (YÃ¼zen KÃ¼reler) */}
+            {/* Arkaplan Efektleri (Yüzen Küreler) */}
             <div className="absolute top-10 left-10 w-72 h-72 bg-brand-primary/10 rounded-full blur-[100px] animate-float"></div>
             <div className="absolute bottom-10 right-10 w-96 h-96 bg-brand-accent/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '2s' }}></div>
 
@@ -115,7 +122,7 @@ export default function Home() {
                     </div>
 
                     {error && (
-                        <div className={`p-3 text-sm rounded-lg border backdrop-blur-md ${error.includes('baÅŸarÄ±lÄ±') ? 'text-green-300 bg-green-900/40 border-green-500/30' : 'text-red-300 bg-red-900/40 border-red-500/30'}`}>
+                        <div className={`p-3 text-sm rounded-lg border backdrop-blur-md ${error.includes('baþarýlý') ? 'text-green-300 bg-green-900/40 border-green-500/30' : 'text-red-300 bg-red-900/40 border-red-500/30'}`}>
                             {error}
                         </div>
                     )}
@@ -128,9 +135,9 @@ export default function Home() {
                                 onChange={(e) => setRememberMe(e.target.checked)}
                                 className="w-4 h-4 rounded border-slate-500 bg-slate-800 text-brand-primary focus:ring-brand-primary/50 transition-colors"
                             />
-                            <span className="text-slate-500 group-hover:text-slate-600 transition-colors">Beni HatÄ±rla</span>
+                            <span className="text-slate-500 group-hover:text-slate-600 transition-colors">Beni Hatýrla</span>
                         </label>
-                        <a href="#" className="text-brand-primary hover:text-brand-accent transition-colors">Åžifremi Unuttum</a>
+                        <a href="#" className="text-brand-primary hover:text-brand-accent transition-colors">Þifremi Unuttum</a>
                     </div>
 
                     <div className="space-y-3 pt-2">
@@ -142,7 +149,7 @@ export default function Home() {
                             {loading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                             ) : (
-                                <>GiriÅŸ Yap <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
+                                <>Giriþ Yap <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
                             )}
                         </button>
 
@@ -152,7 +159,7 @@ export default function Home() {
                             disabled={loading}
                             className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 text-slate-600 font-medium rounded-xl border border-slate-200 transition-colors text-sm"
                         >
-                            HesabÄ±nÄ±z yok mu? <span className="text-brand-accent">KayÄ±t Olun</span>
+                            Hesabýnýz yok mu? <span className="text-brand-accent">Kayýt Olun</span>
                         </button>
                     </div>
                 </form>
@@ -160,15 +167,16 @@ export default function Home() {
                 <div className="mt-8 pt-6 border-t border-slate-200 text-center">
                     <button className="inline-flex items-center text-xs font-medium text-slate-500 hover:text-white transition-colors group">
                         <Smartphone className="h-4 w-4 mr-1group-hover:text-brand-accent transition-colors" />
-                        Mobil UygulamayÄ± Ä°ndir
+                        Mobil Uygulamayý Ýndir
                     </button>
                 </div>
             </div>
 
             {/* Alt Bilgi */}
             <footer className="absolute bottom-4 text-center text-slate-600 text-[10px]">
-                &copy; 2026 Fresh-Rider Hygiene Systems. TÃ¼m haklarÄ± saklÄ±dÄ±r.
+                &copy; 2026 Fresh-Rider Hygiene Systems. Tüm haklarý saklýdýr.
             </footer>
         </main>
     )
 }
+
