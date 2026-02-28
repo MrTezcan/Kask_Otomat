@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -66,9 +66,9 @@ export default function Home() {
                 .single()
 
             if (profile?.role === 'admin' || email.includes('admin')) {
-                router.push('/admin')
+                window.location.href = '/admin'
             } else {
-                router.push('/user')
+                window.location.href = '/user'
             }
         }
     }
