@@ -1,4 +1,4 @@
-﻿export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -309,7 +309,7 @@ export default function UserDashboard() {
             {showSettings && (
                 <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
-                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col">
+                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 pb-28 relative z-10 animate-fade-in-up max-h-[85vh] overflow-y-auto flex flex-col">
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden shrink-0"></div>
 
                         {/* Back button from chat */}
