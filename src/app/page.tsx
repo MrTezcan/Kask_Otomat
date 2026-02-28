@@ -25,13 +25,6 @@ export default function Home() {
             setPassword(savedPassword);
             setRememberMe(true);
         }
-        const savedEmail = localStorage.getItem('rememberedEmail')
-        const savedPassword = localStorage.getItem('rememberedPassword')
-        if (savedEmail && savedPassword) {
-            setEmail(savedEmail)
-            setPassword(savedPassword)
-            setRememberMe(true)
-        }
     }, [])
 
     const handleLogin = async (e: React.FormEvent) => {
