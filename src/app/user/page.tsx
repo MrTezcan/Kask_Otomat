@@ -1,4 +1,32 @@
+export const revalidate = 0;
 export const dynamic = 'force-dynamic';
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/user',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store',
+          },
+        ],
+      }
+    ]
+  },
+};
+
+module.exports = nextConfig;
 'use client'
 
 import { useEffect, useState } from 'react'
