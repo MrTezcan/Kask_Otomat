@@ -1,6 +1,3 @@
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -235,11 +232,11 @@ export default function UserDashboard() {
                     </div>
                 </div>
 
-                {activeTab === 'map' ? (
+                {activeTab === 'map' ? /* MAP IS VISIBLE */ (
                     <div className="h-[60vh] rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 relative">
                         <KioskMap userLocation={userLocation} kiosks={kiosks} />
                     </div>
-                ) : (
+                ) : /* QR IS VISIBLE */ (
                     <div className="w-full bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[42vh]">
                         <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
                             <QrCode className="w-12 h-12" />
@@ -332,7 +329,7 @@ export default function UserDashboard() {
                                         </div>
                                         <button onClick={handleLogout} className="w-full py-3 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition-colors">{t('logout')}</button>
                                     </div>
-                                ) : (
+                                ) : /* QR IS VISIBLE */ (
                                     <div className="space-y-6">
                                         <form onSubmit={handleCreateTicket} className="space-y-3">
                                             <input value={ticketSubject} onChange={e => setTicketSubject(e.target.value)} placeholder={t('ticketSubject')} className="modern-input" required />
@@ -353,7 +350,7 @@ export default function UserDashboard() {
                                     </div>
                                 )}
                             </>
-                        ) : (
+                        ) : /* QR IS VISIBLE */ (
                             <div className="flex flex-col h-[70vh]">
                                 <div className="flex-1 overflow-y-auto space-y-4 p-4">
                                     <div className="flex gap-3">
@@ -401,7 +398,7 @@ export default function UserDashboard() {
                                 <p className="text-slate-600 text-sm leading-relaxed">{selectedNotification.message}</p>
                                 <p className="text-xs text-slate-400 mt-4">{new Date(selectedNotification.created_at).toLocaleString('tr-TR')}</p>
                             </>
-                        ) : (
+                        ) : /* QR IS VISIBLE */ (
                             <>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-xl text-slate-800">Bildirimler</h3>
