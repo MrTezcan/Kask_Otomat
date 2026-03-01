@@ -284,7 +284,7 @@ export default function UserDashboard() {
                                 <select className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium" value={qrDeviceId} onChange={(e) => setQrDeviceId(e.target.value)}>
                                     <option value="">Seçiniz...</option>
                                     {devices.filter(d => d.status === 'online').map(d => (
-                                        <option key={d.id} value={d.id}>{d.name} - 50 TL</option>
+                                        <option key={d.id} value={d.id}>{d.name}</option>
                                     ))}
                                 </select>
                             </div>
