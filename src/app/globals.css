@@ -128,30 +128,30 @@ select {
     background-size: 1.5em 1.5em;
     padding-right: 2.5rem;
 }
-
-/* === Mobile Smooth Scroll === */
-html {
-  scroll-behavior: smooth;
-}
-
+/* === GPU-Accelerated Smooth Scroll for Mobile === */
 * {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Scrollable containers get momentum scrolling on iOS */
+/* Force GPU compositing on scrollable containers */
 .overflow-y-auto,
 .overflow-y-scroll,
-[class*="overflow-y-"] {
-  -webkit-overflow-scrolling: touch;
+[style*="overflow-y: auto"],
+[style*="overflow-y:auto"],
+main,
+.custom-scrollbar,
+.flex-1.overflow-y-auto {
+  -webkit-overflow-scrolling: touch !important;
+  will-change: scroll-position;
+  transform: translateZ(0);
   scroll-behavior: smooth;
 }
 
-/* Remove scroll snapping / step scrolling on touch */
-body {
-  touch-action: pan-y;
-  overscroll-behavior-y: contain;
+/* Remove scroll snap / stepped scroll */
+* {
+  scroll-snap-type: none !important;
 }
 
-main {
-  -webkit-overflow-scrolling: touch;
+body {
+  overscroll-behavior: none;
 }
