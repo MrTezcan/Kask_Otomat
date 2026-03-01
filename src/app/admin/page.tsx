@@ -678,8 +678,31 @@ const findCoordinates = () => {
 
                     {activeTab === 'customers' && (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center"><h3 className="font-bold text-lg text-slate-800">Musteri Listesi</h3><div className="relative"><Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input type="text" placeholder="Ara..." value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand-primary w-64" /></div></div>
-                            <div className="overflow-x-auto">
+                            <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                                <h3 className="font-bold text-lg text-slate-800">Musteri Listesi ({customers.length})</h3>
+                                <div className="relative"><Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input type="text" placeholder="Ara..." value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand-primary w-full sm:w-64" /></div>
+                            </div>
+                            {/* Mobile: card list (no horizontal scroll) */}
+                            <div className="sm:hidden divide-y divide-slate-50">
+                                {customers.filter(c => c.full_name?.toLowerCase().includes(customerSearch.toLowerCase()) || c.email?.toLowerCase().includes(customerSearch.toLowerCase())).map(c => (
+                                    <div key={c.id} className="p-4 flex items-center justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-slate-800 text-sm truncate">{c.full_name}</p>
+                                            <p className="text-xs text-slate-500 truncate">{c.email}</p>
+                                            {c.phone && <p className="text-[10px] text-slate-400">{c.phone}</p>}
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <span className="font-black text-brand-primary text-sm">{c.balance} &#8378;</span>
+                                            <button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">Yonet</button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {customers.filter(c => c.full_name?.toLowerCase().includes(customerSearch.toLowerCase()) || c.email?.toLowerCase().includes(customerSearch.toLowerCase())).length === 0 && (
+                                    <p className="text-center text-slate-400 py-8 text-sm">Musteri bulunamadi</p>
+                                )}
+                            </div>
+                            {/* Desktop: table */}
+                            <div className="hidden sm:block overflow-x-auto">
                                 <table className="w-full text-sm text-left">
                                     <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-bold border-b border-slate-100"><tr><th className="p-4">Ad Soyad</th><th className="p-4">Iletisim</th><th className="p-4">Bakiye</th><th className="p-4 text-right">Islem</th></tr></thead>
                                     <tbody className="divide-y divide-slate-50">
