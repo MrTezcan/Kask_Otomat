@@ -327,7 +327,17 @@ export default function AdminDashboard() {
             </aside>
 
             <main className="flex-1 overflow-y-auto relative scroll-smooth bg-slate-50/50">
-                <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-10"><Logo size="small" /><button onClick={() => setShowAdminSettings(true)} className="p-2 rounded-xl hover:bg-slate-100"><Settings className="w-6 h-6 text-slate-600" /></button></header>
+                <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
+                    <Logo size="small" />
+                    <div className="flex gap-1 items-center">
+                        <button onClick={() => setActiveTab('notifications')} className={"relative p-2 rounded-xl hover:bg-slate-100 active:scale-95 transition-colors " + (activeTab === 'notifications' ? 'text-brand-primary' : 'text-slate-500')}>
+                            <Bell className="w-6 h-6" />
+                        </button>
+                        <button onClick={() => setShowAdminSettings(true)} className="p-2 rounded-xl hover:bg-slate-100 active:scale-95 transition-colors text-slate-500">
+                            <Settings className="w-6 h-6" />
+                        </button>
+                    </div>
+                </header>
                 <div className="p-4 md:p-8 max-w-7xl mx-auto pb-24">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
