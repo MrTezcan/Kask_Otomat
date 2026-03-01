@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 
 const KioskMap = nextDynamic(() => import('@/components/KioskMap'), { ssr: false })
+const QrScannerComponent = nextDynamic(() => import('@/components/QrScanner'), { ssr: false })
 
 type Device = {
     id: string
@@ -16,6 +17,7 @@ type Device = {
     latitude?: number
     longitude?: number
     status: 'online' | 'offline' | 'maintenance'
+    hizmet_fiyati: number
 }
 
 export default function UserDashboard() {
@@ -24,6 +26,7 @@ export default function UserDashboard() {
 
     const [activeTab, setActiveTab] = useState<'home' | 'map'>('home')
     const [showQrModal, setShowQrModal] = useState(false)
+    const [showCameraScanner, setShowCameraScanner] = useState(false)
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [paymentProcessing, setPaymentProcessing] = useState(false)
     const [balance, setBalance] = useState(0)
@@ -132,7 +135,7 @@ export default function UserDashboard() {
         const device = devices.find(d => d.id === qrDeviceId)
         if (!device) return alert('Ge\u00e7ersiz makine.')
         if (device.status !== 'online') return alert('Bu makine \u015fu anda hizmet veremiyor.')
-        const finalPrice = 50
+        const finalPrice = device.hizmet_fiyati || 50
         if (balance < finalPrice) return alert('Bakiye yetersiz!')
         setPaymentProcessing(true)
         try {
@@ -290,7 +293,7 @@ export default function UserDashboard() {
                                 <span className="text-lg font-black text-indigo-700">{balance} TL</span>
                             </div>
                             <button onClick={handleQrPayment} disabled={paymentProcessing || !qrDeviceId} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
-                                {paymentProcessing ? '\u0130\u015fleniyor...' : '50 TL \u00d6de ve Ba\u015flat'}
+                                {paymentProcessing ? '\u0130\u015fleniyor...' : (devices.find(d => d.id === qrDeviceId)?.hizmet_fiyati || 50) + ' TL \u00d6de ve Ba\u015flat'}
                             </button>
                         </div>
                     </div>
