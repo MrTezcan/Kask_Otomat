@@ -287,13 +287,27 @@ export default function AdminDashboard() {
         }
     }
 
-    const findCoordinates = async () => {
+const findCoordinates = () => {
+        if (!navigator.geolocation) return alert('Cihaziniz konum desteklemiyor.')
         setIsGeocoding(true)
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${addrStreet} ${addrDistrict} ${addrProvince}`)}`)
-            const data = await res.json()
-            if (data[0]) { setNewKioskLocation([parseFloat(data[0].lat), parseFloat(data[0].lon)]); setNewKioskAddress(data[0].display_name) }
-        } catch (e) { } finally { setIsGeocoding(false) }
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude
+                const lng = pos.coords.longitude
+                setNewKioskLocation([lat, lng])
+                try {
+                    const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=tr')
+                    const data = await res.json()
+                    if (data?.display_name) setNewKioskAddress(data.display_name)
+                } catch (e) {}
+                setIsGeocoding(false)
+            },
+            (err) => {
+                alert('Konum alinamadi: ' + err.message)
+                setIsGeocoding(false)
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        )
     }
 
     useEffect(() => { fetchOtaReleases() }, [])
@@ -895,6 +909,40 @@ export default function AdminDashboard() {
 
                 </div>
             </nav>
+
+            {/* Admin Settings Modal */}
+            {showAdminSettings && (
+                <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAdminSettings(false)} />
+                    <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto">
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5 sm:hidden" />
+                        <div className="flex justify-between items-center mb-5">
+                            <h3 className="font-bold text-lg text-slate-800">Ayarlar</h3>
+                            <button onClick={() => setShowAdminSettings(false)} className="p-2 bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <label className="text-xs font-bold text-slate-400 uppercase mb-3 block">Dil / Language</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => setLanguage('tr')} className={"py-2.5 rounded-xl text-sm font-bold transition-all " + (language === 'tr' ? 'bg-white shadow-md text-brand-primary border border-brand-primary/20' : 'text-slate-500 bg-white border border-slate-100')}>Turkce</button>
+                                    <button onClick={() => setLanguage('en')} className={"py-2.5 rounded-xl text-sm font-bold transition-all " + (language === 'en' ? 'bg-white shadow-md text-brand-primary border border-brand-primary/20' : 'text-slate-500 bg-white border border-slate-100')}>English</button>
+                                </div>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                                <label className="text-xs font-bold text-slate-400 uppercase block">Sifre Degistir</label>
+                                <form onSubmit={handleAdminPasswordChange} className="space-y-2">
+                                    <input type="password" value={adminOldPw} onChange={e => setAdminOldPw(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm outline-none focus:border-brand-primary" placeholder="Eski sifre" required />
+                                    <input type="password" value={adminNewPw} onChange={e => setAdminNewPw(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm outline-none focus:border-brand-primary" placeholder="Yeni sifre (min 6)" required />
+                                    <input type="password" value={adminConfirmPw} onChange={e => setAdminConfirmPw(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm outline-none focus:border-brand-primary" placeholder="Yeni sifre tekrar" required />
+                                    <button type="submit" className="w-full py-3 bg-brand-primary text-white font-bold rounded-xl flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Sifreyi Guncelle</button>
+                                </form>
+                            </div>
+                            <button onClick={() => router.push('/user')} className="w-full py-3 bg-indigo-50 text-indigo-700 font-bold rounded-xl flex items-center justify-center gap-2"><Eye className="w-4 h-4" /> Kullanici Gorununumune Gec</button>
+                            <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="w-full py-3 bg-red-50 text-red-600 font-bold rounded-xl">Cikis Yap</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
