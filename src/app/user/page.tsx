@@ -131,10 +131,10 @@ export default function UserDashboard() {
     }
 
     const handleQrPayment = async () => {
-        if (!qrDeviceId) return alert('L\u00fctfen makine se\u00e7in.')
+        if (!qrDeviceId) return alert('Lütfen makine seçin.')
         const device = devices.find(d => d.id === qrDeviceId)
-        if (!device) return alert('Ge\u00e7ersiz makine.')
-        if (device.status !== 'online') return alert('Bu makine \u015fu anda hizmet veremiyor.')
+        if (!device) return alert('Geçersiz makine.')
+        if (device.status !== 'online') return alert('Bu makine şu anda hizmet veremiyor.')
         const finalPrice = device.hizmet_fiyati || 50
         if (balance < finalPrice) return alert('Bakiye yetersiz!')
         setPaymentProcessing(true)
@@ -142,8 +142,8 @@ export default function UserDashboard() {
             const { error: balError } = await supabase.rpc('increment_balance', { amount: -finalPrice, user_id: userId })
             if (balError) throw balError
             await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme', status: 'completed' })
-            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: '\u00d6deme Ba\u015far\u0131l\u0131', message: device.name + ' cihaz\u0131nda ' + finalPrice + ' TL \u00f6deme yap\u0131ld\u0131.' })
-            alert('\u00d6deme ba\u015far\u0131l\u0131! Makine \u00e7al\u0131\u015fmaya ba\u015fl\u0131yor.')
+            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'Ödeme Başarılı', message: device.name + ' cihazında ' + finalPrice + ' TL ödeme yapıldı.' })
+            alert('Ödeme başarılı! Makine çalışmaya başlıyor.')
             setShowQrModal(false); setQrDeviceId(''); setBalance(prev => prev - finalPrice)
         } catch (e: any) {
             alert('Hata: ' + e.message)
@@ -169,15 +169,15 @@ export default function UserDashboard() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (newPassword.length < 6) return alert('\u015eifre en az 6 karakter olmal\u0131d\u0131r.')
-        if (newPassword !== confirmPassword) return alert('Yeni \u015fifreler e\u015fle\u015fmiyor.')
+        if (newPassword.length < 6) return alert('Şifre en az 6 karakter olmalıdır.')
+        if (newPassword !== confirmPassword) return alert('Yeni şifreler eşleşmiyor.')
         const { data: { user } } = await supabase.auth.getUser()
         if (!user?.email) return
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: oldPassword })
-        if (signInError) return alert('Eski \u015fifre yanl\u0131\u015f.')
+        if (signInError) return alert('Eski şifre yanlış.')
         const { error } = await supabase.auth.updateUser({ password: newPassword })
-        if (error) { alert('\u015eifre g\u00fcncellenirken hata: ' + error.message) }
-        else { alert('\u015eifreniz g\u00fcncellendi.'); setOldPassword(''); setNewPassword(''); setConfirmPassword('') }
+        if (error) { alert('Şifre güncellenirken hata: ' + error.message) }
+        else { alert('Şifreniz güncellendi.'); setOldPassword(''); setNewPassword(''); setConfirmPassword('') }
     }
 
     const handleLogout = async () => { await supabase.auth.signOut(); router.push('/') }
@@ -230,7 +230,7 @@ export default function UserDashboard() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2">
-                            <span className="text-indigo-100 text-xs font-bold uppercase tracking-widest">C\u00dcZDANIM</span>
+                            <span className="text-indigo-100 text-xs font-bold uppercase tracking-widest">CÜZDANIM</span>
                             <Wallet className="w-5 h-5 text-indigo-200" />
                         </div>
                         <h2 className="text-4xl font-black mb-6 tracking-tight">{balance} <span className="text-2xl font-medium opacity-80">TL</span></h2>
@@ -253,16 +253,16 @@ export default function UserDashboard() {
                         <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-5 shadow-inner">
                             <QrCode className="w-10 h-10" />
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR \u00d6deme</h3>
+                        <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR Ödeme</h3>
                         <p className="text-slate-500 text-center text-sm mb-6 max-w-xs leading-relaxed">
-                            Kask otomatinin \u00fczerindeki QR kodu okutun veya makine kodunu girerek \u00f6demenizi yap\u0131n.
+                            Kask otomatinin üzerindeki QR kodu okutun veya makine kodunu girerek ödemenizi yapın.
                         </p>
                         <button
                             onClick={() => setShowQrModal(true)}
                             className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
                         >
                             <QrCode className="w-5 h-5" />
-                            Kod Girerek \u00d6de
+                            Kod Girerek Öde
                         </button>
                     </div>
                 )}
@@ -275,14 +275,14 @@ export default function UserDashboard() {
                     <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10">
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-xl text-slate-800">QR \u00d6deme</h3>
+                            <h3 className="font-bold text-xl text-slate-800">QR Ödeme</h3>
                             <button onClick={() => setShowQrModal(false)} className="p-2 bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Makine Se\u00e7</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Makine Seç</label>
                                 <select className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium" value={qrDeviceId} onChange={(e) => setQrDeviceId(e.target.value)}>
-                                    <option value="">Se\u00e7iniz...</option>
+                                    <option value="">Seçiniz...</option>
                                     {devices.filter(d => d.status === 'online').map(d => (
                                         <option key={d.id} value={d.id}>{d.name} - 50 TL</option>
                                     ))}
@@ -293,7 +293,7 @@ export default function UserDashboard() {
                                 <span className="text-lg font-black text-indigo-700">{balance} TL</span>
                             </div>
                             <button onClick={handleQrPayment} disabled={paymentProcessing || !qrDeviceId} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
-                                {paymentProcessing ? '\u0130\u015fleniyor...' : (devices.find(d => d.id === qrDeviceId)?.hizmet_fiyati || 50) + ' TL \u00d6de ve Ba\u015flat'}
+                                {paymentProcessing ? 'İşleniyor...' : (devices.find(d => d.id === qrDeviceId)?.hizmet_fiyati || 50) + ' TL Öde ve Başlat'}
                             </button>
                         </div>
                     </div>
@@ -315,7 +315,7 @@ export default function UserDashboard() {
                         {!selectedTicket ? (
                             <>
                                 <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-2 shrink-0">
-                                    <button onClick={() => setSettingsTab('account')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'account' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Profil Ayarlar\u0131</button>
+                                    <button onClick={() => setSettingsTab('account')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'account' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Profil Ayarları</button>
                                     <button onClick={() => setSettingsTab('support')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'support' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Destek</button>
                                 </div>
                                 {settingsTab === 'account' ? (
@@ -324,33 +324,33 @@ export default function UserDashboard() {
                                             <label className="text-xs font-bold text-slate-400 uppercase block">Ad Soyad</label>
                                             <div className="flex gap-2">
                                                 <input value={name} onChange={e => setName(e.target.value)} className="modern-input flex-1" placeholder="Ad Soyad" />
-                                                <button onClick={async () => { const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId); if (!error) alert('Profil g\u00fcncellendi') }} className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
+                                                <button onClick={async () => { const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId); if (!error) alert('Profil güncellendi') }} className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
                                             </div>
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                                            <label className="text-xs font-bold text-slate-400 uppercase block">\u015eifre De\u011fi\u015ftir</label>
+                                            <label className="text-xs font-bold text-slate-400 uppercase block">Şifre Değiştir</label>
                                             <form onSubmit={handlePasswordChange} className="space-y-2">
-                                                <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="Eski \u015fifre" required />
-                                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni \u015fifre (min 6 karakter)" required />
-                                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni \u015fifre tekrar" required />
-                                                <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> \u015eifreyi G\u00fcncelle</button>
+                                                <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="Eski şifre" required />
+                                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni şifre (min 6 karakter)" required />
+                                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni şifre tekrar" required />
+                                                <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Şifreyi Güncelle</button>
                                             </form>
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                             <label className="text-xs font-bold text-slate-400 uppercase mb-3 block">Dil</label>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <button onClick={() => setLanguage('tr')} className={'py-2 rounded-xl text-sm font-bold ' + (language === 'tr' ? 'bg-white shadow text-indigo-600' : 'text-slate-500')}>T\u00fcrk\u00e7e</button>
+                                                <button onClick={() => setLanguage('tr')} className={'py-2 rounded-xl text-sm font-bold ' + (language === 'tr' ? 'bg-white shadow text-indigo-600' : 'text-slate-500')}>Türkçe</button>
                                                 <button onClick={() => setLanguage('en')} className={'py-2 rounded-xl text-sm font-bold ' + (language === 'en' ? 'bg-white shadow text-indigo-600' : 'text-slate-500')}>English</button>
                                             </div>
                                         </div>
-                                        <button onClick={handleLogout} className="w-full py-3 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition-colors">\u00c7\u0131k\u0131\u015f Yap</button>
+                                        <button onClick={handleLogout} className="w-full py-3 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition-colors">Çıkış Yap</button>
                                     </div>
                                 ) : (
                                     <div className="space-y-6">
                                         <form onSubmit={handleCreateTicket} className="space-y-3">
                                             <input value={ticketSubject} onChange={e => setTicketSubject(e.target.value)} placeholder="Konu" className="modern-input" required />
-                                            <textarea value={ticketMessage} onChange={e => setTicketMessage(e.target.value)} placeholder="Mesaj\u0131n\u0131z..." className="modern-input" rows={3} required />
-                                            <button type="submit" className="btn-primary w-full bg-emerald-500">Talep G\u00f6nder</button>
+                                            <textarea value={ticketMessage} onChange={e => setTicketMessage(e.target.value)} placeholder="Mesajınız..." className="modern-input" rows={3} required />
+                                            <button type="submit" className="btn-primary w-full bg-emerald-500">Talep Gönder</button>
                                         </form>
                                         <div className="space-y-3">
                                             {tickets.map(ticket => (
@@ -371,7 +371,7 @@ export default function UserDashboard() {
                                 <div className="flex-1 overflow-y-auto space-y-4 p-4">
                                     <div className="flex gap-3">
                                         <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">S</div>
-                                        <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">Ba\u015flang\u0131\u00e7 Mesaj\u0131</p>{selectedTicket.message}</div>
+                                        <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">Başlangıç Mesajı</p>{selectedTicket.message}</div>
                                     </div>
                                     {chatReplies.map(reply => (
                                         <div key={reply.id} className={'flex gap-3 ' + (!reply.is_admin ? 'justify-end' : '')}>
@@ -385,7 +385,7 @@ export default function UserDashboard() {
                                     <div className="h-4" />
                                 </div>
                                 <div className="flex gap-2 p-4 border-t border-slate-100 shrink-0">
-                                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendReply()} placeholder="Mesaj\u0131n\u0131z\u0131 yaz\u0131n..." className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400" />
+                                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendReply()} placeholder="Mesajınızı yazın..." className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400" />
                                     <button onClick={handleSendReply} className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg active:scale-95"><Send className="w-5 h-5" /></button>
                                 </div>
                             </div>
@@ -413,7 +413,7 @@ export default function UserDashboard() {
                             <>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-xl text-slate-800">Bildirimler</h3>
-                                    <button onClick={markAllAsRead} className="text-xs text-indigo-600 font-bold">T\u00fcm\u00fcn\u00fc Oku</button>
+                                    <button onClick={markAllAsRead} className="text-xs text-indigo-600 font-bold">Tümünü Oku</button>
                                 </div>
                                 <div className="space-y-2">
                                     {notifications.length === 0 && <p className="text-slate-400 text-center py-8 text-sm">Bildirim yok</p>}
@@ -450,7 +450,7 @@ export default function UserDashboard() {
                     </button>
                     <button onClick={() => router.push('/user/wallet')} className="flex flex-col items-center gap-1 p-2 flex-1 text-slate-400 hover:text-indigo-600 transition-colors">
                         <Wallet className="w-6 h-6" />
-                        <span className="text-[10px] font-medium">C\u00fczdan\u0131m</span>
+                        <span className="text-[10px] font-medium">Cüzdanım</span>
                     </button>
                     <button onClick={() => { setShowSettings(true); setSettingsTab('account') }} className="flex flex-col items-center gap-1 p-2 flex-1 text-slate-400 hover:text-indigo-600 transition-colors">
                         <User className="w-6 h-6" />
