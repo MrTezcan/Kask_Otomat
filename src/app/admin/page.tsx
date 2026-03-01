@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Activity, Settings, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap } from 'lucide-react'
+import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap } from 'lucide-react'
 import Logo from '@/components/Logo'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -76,6 +76,10 @@ export default function AdminDashboard() {
 
     // Notification State
     const [showNotifModal, setShowNotifModal] = useState(false)
+    const [showAdminSettings, setShowAdminSettings] = useState(false)
+    const [adminOldPw, setAdminOldPw] = useState('')
+    const [adminNewPw, setAdminNewPw] = useState('')
+    const [adminConfirmPw, setAdminConfirmPw] = useState('')
     const [notifTitle, setNotifTitle] = useState('')
     const [notifMessage, setNotifMessage] = useState('')
     const [notifType, setNotifType] = useState('info')
@@ -108,6 +112,19 @@ export default function AdminDashboard() {
         return () => { supabase.removeChannel(sub); supabase.removeChannel(chatSub) }
     }, [selectedTicket])
 
+
+    const handleAdminPasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (adminNewPw.length < 6) return alert('Sifre en az 6 karakter olmalidir.')
+        if (adminNewPw !== adminConfirmPw) return alert('Sifreler eslesmiyor.')
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user?.email) return
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: adminOldPw })
+        if (signInError) return alert('Eski sifre yanlis.')
+        const { error } = await supabase.auth.updateUser({ password: adminNewPw })
+        if (error) alert('Hata: ' + error.message)
+        else { alert('Sifreniz guncellendi.'); setAdminOldPw(''); setAdminNewPw(''); setAdminConfirmPw(''); setShowAdminSettings(false) }
+    }
     const fetchDevices = async () => { const { data } = await supabase.from('devices').select('*').order('name'); if (data) setDevices(data) }
     const fetchCustomers = async () => { const { data } = await supabase.from('profiles').select('*').order('full_name'); if (data) setCustomers(data) }
     const fetchTransactions = async () => { const { data } = await supabase.from('transactions').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setTransactions(data) }
@@ -310,7 +327,7 @@ export default function AdminDashboard() {
             </aside>
 
             <main className="flex-1 overflow-y-auto relative scroll-smooth bg-slate-50/50">
-                <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-10"><Logo size="small" /><button><Settings className="w-6 h-6 text-slate-600" /></button></header>
+                <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-10"><Logo size="small" /><button onClick={() => setShowAdminSettings(true)} className="p-2 rounded-xl hover:bg-slate-100"><Settings className="w-6 h-6 text-slate-600" /></button></header>
                 <div className="p-4 md:p-8 max-w-7xl mx-auto pb-24">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
@@ -354,50 +371,122 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {activeTab === 'support' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up h-[calc(100vh-200px)]">
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                                <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-                                    <h3 className="font-bold text-slate-800">Talepler ({tickets.filter(t => t.status !== 'closed').length})</h3>
-                                    <button onClick={() => setShowNotifModal(true)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors" title="Kullanicilara Bildirim Gonder"><Bell className="w-4 h-4" /></button>
+{activeTab === 'support' && (
+                        <div className="animate-fade-in-up flex flex-col" style={{ height: 'calc(100vh - 220px)' }}>
+                            {/* Mobile: show either ticket list OR chat. Desktop: side by side */}
+                            <div className="flex flex-1 gap-4 overflow-hidden">
+
+                                {/* Ticket List — hidden on mobile when a ticket is selected */}
+                                <div className={"bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col flex-shrink-0 " + (selectedTicket ? "hidden lg:flex" : "flex w-full lg:w-80")}>
+                                    <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+                                        <h3 className="font-bold text-slate-800">Talepler ({tickets.filter(t => t.status !== 'closed').length})</h3>
+                                        <button onClick={() => setShowNotifModal(true)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors" title="Bildirim Gonder"><Bell className="w-4 h-4" /></button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto divide-y divide-slate-50">
+                                        {tickets.length === 0 && <p className="text-center text-slate-400 text-sm py-12">Talep bulunamadi</p>}
+                                        {tickets.map(ticket => (
+                                            <div key={ticket.id} onClick={() => { setSelectedTicket(ticket); fetchReplies(ticket.id) }}
+                                                className={"p-4 cursor-pointer transition-all " + (selectedTicket?.id === ticket.id ? 'bg-brand-primary/5 border-l-4 border-brand-primary' : 'hover:bg-slate-50 border-l-4 border-transparent')}>
+                                                <div className="flex justify-between items-start mb-1 gap-2">
+                                                    <span className="font-bold text-sm text-slate-800 leading-tight flex-1">{ticket.subject}</span>
+                                                    <span className={"text-[10px] px-2 py-0.5 rounded-full uppercase font-black shrink-0 " + (ticket.status === 'open' ? 'bg-red-100 text-red-600' : ticket.status === 'in_progress' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600')}>{ticket.status}</span>
+                                                </div>
+                                                <p className="text-xs text-slate-500 line-clamp-2 mb-2">{ticket.message}</p>
+                                                <p className="text-[10px] text-slate-400">{new Date(ticket.created_at).toLocaleString('tr-TR')}</p>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                                    {tickets.map(ticket => (
-                                        <div key={ticket.id} onClick={async () => { setSelectedTicket(ticket); fetchReplies(ticket.id) }} className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedTicket?.id === ticket.id ? 'bg-brand-primary/5 border-brand-primary/30' : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}>
-                                            <div className="flex justify-between mb-1"><span className="font-bold text-sm text-slate-800 truncate">{ticket.subject}</span><span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${ticket.status === 'open' ? 'bg-red-100 text-red-600' : ticket.status === 'in_progress' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>{ticket.status}</span></div>
-                                            <p className="text-xs text-slate-500 truncate">{ticket.message}</p>
-                                            <p className="text-[10px] text-slate-400 mt-2 text-right">{new Date(ticket.created_at).toLocaleString('tr-TR')}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                                {selectedTicket ? (
-                                    <>
-                                        <div className="p-6 border-b border-slate-100 flex justify-between items-start">
-                                            <div><h2 className="text-xl font-bold text-slate-800">{selectedTicket.subject}</h2><p className="text-sm text-slate-500 mt-1">{selectedTicket.profiles?.full_name} ({selectedTicket.profiles?.email})</p></div>
-                                            {selectedTicket.status !== 'closed' && <button onClick={handleResolveTicket} className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold border border-emerald-100 hover:bg-emerald-100">Cozuldu Olarak Isatle</button>}
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 flex flex-col-reverse custom-scrollbar">
-                                            <div className="space-y-4 pb-2">
-                                                <div className="flex gap-4"><div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">U</div> <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 max-w-[80%] border border-slate-100"><p className="font-bold text-slate-900 text-xs mb-1">Kullanici (Sorun)</p>{selectedTicket.message}</div></div>
-                                                {selectedTicket.admin_reply && ticketReplies.length === 0 && <div className="flex gap-4 flex-row-reverse"><div className="w-8 h-8 rounded-full bg-brand-primary flex-shrink-0 flex items-center justify-center text-xs font-bold text-white">A</div> <div className="bg-brand-primary text-white p-4 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%]"><p className="font-bold text-white/80 text-xs mb-1">Admin Yaniti</p>{selectedTicket.admin_reply}</div></div>}
+
+                                {/* Chat Area — full screen on mobile when ticket is selected */}
+                                <div className={"flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col " + (!selectedTicket ? "hidden lg:flex" : "flex w-full")}>
+                                    {selectedTicket ? (
+                                        <>
+                                            {/* Chat Header */}
+                                            <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-white">
+                                                <button onClick={() => setSelectedTicket(null)} className="lg:hidden p-2 bg-slate-100 rounded-xl hover:bg-slate-200 active:scale-95">
+                                                    <ChevronLeft className="w-5 h-5 text-slate-600" />
+                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                    <h2 className="font-bold text-slate-800 truncate">{selectedTicket.subject}</h2>
+                                                    <p className="text-xs text-slate-500 truncate">{selectedTicket.profiles?.full_name || 'Kullanici'}</p>
+                                                </div>
+                                                {selectedTicket.status !== 'closed' && (
+                                                    <button onClick={handleResolveTicket} className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-bold border border-emerald-200 hover:bg-emerald-100 active:scale-95 whitespace-nowrap">
+                                                        Cozuldu
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Messages */}
+                                            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+                                                {/* Original message */}
+                                                <div className="flex gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-black text-slate-600">K</div>
+                                                    <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm">
+                                                        <p className="text-[11px] font-black text-slate-500 uppercase mb-1">Musteri Sorusu</p>
+                                                        <p className="text-sm text-slate-800 leading-relaxed">{selectedTicket.message}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Legacy admin reply */}
+                                                {selectedTicket.admin_reply && ticketReplies.length === 0 && (
+                                                    <div className="flex gap-3 flex-row-reverse">
+                                                        <div className="w-8 h-8 rounded-full bg-brand-primary flex-shrink-0 flex items-center justify-center text-xs font-black text-white">A</div>
+                                                        <div className="bg-brand-primary text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] shadow-sm">
+                                                            <p className="text-[11px] font-black text-white/70 mb-1 uppercase">Admin</p>
+                                                            <p className="text-sm leading-relaxed">{selectedTicket.admin_reply}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Replies */}
                                                 {ticketReplies.map(reply => (
-                                                    <div key={reply.id} className={`flex gap-4 ${reply.is_admin ? 'flex-row-reverse' : ''}`}>
-                                                        <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${reply.is_admin ? 'bg-brand-primary text-white' : 'bg-slate-200 text-slate-500'}`}>{reply.is_admin ? 'A' : 'U'}</div>
-                                                        <div className={`p-4 rounded-2xl shadow-sm text-sm max-w-[80%] ${reply.is_admin ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'}`}>
-                                                            <p className={`font-bold text-xs mb-1 ${reply.is_admin ? 'text-white/80' : 'text-slate-900'}`}>{reply.is_admin ? 'Admin' : 'Kullanici'} <span className="opacity-50 font-normal ml-2">{new Date(reply.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span></p>
-                                                            {reply.message}
+                                                    <div key={reply.id} className={"flex gap-3 " + (reply.is_admin ? 'flex-row-reverse' : '')}>
+                                                        <div className={"w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-black " + (reply.is_admin ? 'bg-brand-primary text-white' : 'bg-slate-200 text-slate-600')}>
+                                                            {reply.is_admin ? 'A' : 'K'}
+                                                        </div>
+                                                        <div className={"rounded-2xl px-4 py-3 max-w-[85%] shadow-sm " + (reply.is_admin ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none')}>
+                                                            <div className={"flex items-center gap-2 mb-1 " + (reply.is_admin ? 'flex-row-reverse' : '')}>
+                                                                <p className={"text-[11px] font-black uppercase " + (reply.is_admin ? 'text-white/70' : 'text-slate-500')}>{reply.is_admin ? 'Admin' : 'Kullanici'}</p>
+                                                                <span className={"text-[10px] " + (reply.is_admin ? 'text-white/50' : 'text-slate-400')}>{new Date(reply.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                            </div>
+                                                            <p className="text-sm leading-relaxed">{reply.message}</p>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
+
+                                            {/* Reply Input */}
+                                            {selectedTicket.status !== 'closed' ? (
+                                                <div className="p-4 border-t border-slate-100 bg-white">
+                                                    <div className="flex gap-3 items-end">
+                                                        <textarea
+                                                            value={replyText}
+                                                            onChange={e => setReplyText(e.target.value)}
+                                                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReplyTicket() } }}
+                                                            placeholder="Yanit yazin... (Enter ile gonder)"
+                                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-brand-primary resize-none leading-relaxed"
+                                                            rows={3}
+                                                        />
+                                                        <button onClick={handleReplyTicket} className="p-3 bg-brand-primary text-white rounded-2xl shadow-lg hover:shadow-brand-primary/30 active:scale-95 transition-all shrink-0">
+                                                            <Send className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 border-t border-slate-100 bg-slate-50 text-center">
+                                                    <span className="text-xs text-slate-400 font-bold uppercase">Bu talep kapanmistir</span>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-300">
+                                            <MessageSquare className="w-16 h-16 mb-3 opacity-30" />
+                                            <p className="text-sm font-medium">Bir talep secin</p>
                                         </div>
-                                        {selectedTicket.status !== 'closed' && (
-                                            <div className="p-4 border-t border-slate-100 bg-white"><div className="flex gap-2"><textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Yanit yazin..." className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm min-h-[40px] max-h-[100px] focus:outline-none focus:border-brand-primary resize-none" /><button onClick={handleReplyTicket} className="btn-primary py-2 px-4 text-sm flex items-center gap-2 self-end"><Send className="w-4 h-4" /> Gonder</button></div></div>
-                                        )}
-                                    </>
-                                ) : <div className="flex items-center justify-center h-full text-slate-400 flex-col"><MessageSquare className="w-12 h-12 mb-2 opacity-20" /><p>Detaylari gormek icin bir talep secin</p></div>}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -777,7 +866,7 @@ export default function AdminDashboard() {
             )}
             {/* Mobile Bottom Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.07)]">
-                <div className="grid grid-cols-6 items-center py-1">
+                <div className="grid grid-cols-5 items-center py-1">
                     <button onClick={() => setActiveTab('dashboard')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'dashboard' ? 'text-brand-primary' : 'text-slate-400')}>
                         <LayoutDashboard className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Genel</span>
                     </button>
