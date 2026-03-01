@@ -1,15 +1,14 @@
 'use client'
-export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send } from 'lucide-react'
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 
-const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
+const KioskMap = nextDynamic(() => import('@/components/KioskMap'), { ssr: false })
 
 type Device = {
     id: string
@@ -203,8 +202,8 @@ export default function UserDashboard() {
     }
 
     return (
-        <div className="min-h-screen pb-24 relative bg-slate-50">
-            <header className="px-6 pt-8 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-30 border-b border-slate-100">
+        <div className="min-h-screen pb-24 relative bg-slate-50 overflow-x-hidden">
+            <header className="px-4 pt-safe pt-4 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-30 border-b border-slate-100">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">{name.charAt(0).toUpperCase()}</div>
                     <div><p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">{t('greeting')}</p><h1 className="text-lg font-bold text-slate-800 leading-none">{name}</h1></div>
@@ -219,7 +218,7 @@ export default function UserDashboard() {
                 </div>
             </header>
 
-            <main className="px-4 space-y-4 mt-4">
+            <main className="px-4 space-y-4 mt-4 max-w-lg mx-auto">
                 <div className="w-full p-6 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div className="relative z-10">
@@ -239,7 +238,7 @@ export default function UserDashboard() {
                         <KioskMap userLocation={userLocation} kiosks={kiosks} />
                     </div>
                 ) : /* QR IS VISIBLE */ (
-                    <div className="w-full bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[42vh]">
+                    <div className="w-full bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center">
                         <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
                             <QrCode className="w-12 h-12" />
                         </div>
@@ -426,8 +425,8 @@ export default function UserDashboard() {
                 </div>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 pt-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999]">
-                <div className="flex justify-around items-end pb-2 max-w-sm mx-auto">
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 pt-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999]" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}>
+                <div className="flex justify-around items-center pb-2 px-2">
                     <button className="flex flex-col items-center gap-1 p-2 w-20" onClick={() => setActiveTab('home')}>
                         {activeTab === 'home' && <div className="w-10 h-0.5 bg-indigo-600 rounded-full mb-0.5"></div>}
                         <Activity className={'w-6 h-6 ' + (activeTab === 'home' ? 'text-indigo-600' : 'text-slate-400')} />
