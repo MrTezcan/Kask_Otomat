@@ -42,7 +42,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [adminName, setAdminName] = useState('')
     const router = useRouter()
-    const { t } = useLanguage()
+    const { t, language, setLanguage } = useLanguage()
 
     const [otaReleases, setOtaReleases] = useState<any[]>([])
     const [otaFile, setOtaFile] = useState<File | null>(null)
@@ -876,12 +876,13 @@ export default function AdminDashboard() {
                     <button onClick={() => setActiveTab('customers')} className={"flex flex-col items-center gap-0.5 px-2 py-1.5 flex-1 " + (activeTab === 'customers' ? 'text-brand-primary' : 'text-slate-400')}>
                         <Users className="w-5 h-5" /><span className="text-[9px] font-bold">Musteriler</span>
                     </button>
+                    <button onClick={() => setActiveTab('finance')} className={"flex flex-col items-center gap-0.5 px-2 py-1.5 flex-1 " + (activeTab === 'finance' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <CreditCard className="w-5 h-5" /><span className="text-[9px] font-bold">Finans</span>
+                    </button>
                     <button onClick={() => setActiveTab('support')} className={"flex flex-col items-center gap-0.5 px-2 py-1.5 flex-1 " + (activeTab === 'support' ? 'text-brand-primary' : 'text-slate-400')}>
                         <MessageSquare className="w-5 h-5" /><span className="text-[9px] font-bold">Destek</span>
                     </button>
-                    <button onClick={() => setShowAdminSettings(true)} className="flex flex-col items-center gap-0.5 px-2 py-1.5 flex-1 text-slate-400">
-                        <Settings className="w-5 h-5" /><span className="text-[9px] font-bold">Ayarlar</span>
-                    </button>
+
                 </div>
             </nav>
         </div>
