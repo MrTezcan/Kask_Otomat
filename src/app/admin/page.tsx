@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -287,7 +287,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
-            <aside className="w-full md:w-64 h-16 md:h-full bg-white border-b md:border-r border-slate-200 flex flex-row md:flex-col z-20 shadow-sm relative overflow-x-auto md:overflow-x-visible shrink-0 no-scrollbar custom-scrollbar-hide">
+            <aside className="hidden md:flex md:w-64 md:h-full bg-white md:border-r border-slate-200 md:flex-col z-20 shadow-sm shrink-0">
                 <div className="md:h-20 h-full flex items-center px-4 md:px-6 border-r md:border-b md:border-r-0 border-slate-100 shrink-0"><Logo size="small" /></div>
                 <nav className="flex-1 p-2 md:p-4 md:space-y-1 overflow-x-auto md:overflow-x-transparent flex flex-row md:flex-col items-center md:items-stretch gap-2 md:gap-0 no-scrollbar">
                     <SidebarItem icon={LayoutDashboard} label="Genel Bakis" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
@@ -775,9 +775,29 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             )}
+            {/* Mobile Bottom Navigation */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.07)]">
+                <div className="grid grid-cols-6 items-center py-1">
+                    <button onClick={() => setActiveTab('dashboard')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'dashboard' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <LayoutDashboard className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Genel</span>
+                    </button>
+                    <button onClick={() => setActiveTab('devices')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'devices' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <Server className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Cihazlar</span>
+                    </button>
+                    <button onClick={() => setActiveTab('customers')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'customers' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <Users className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Musteriler</span>
+                    </button>
+                    <button onClick={() => setActiveTab('finance')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'finance' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <CreditCard className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Finans</span>
+                    </button>
+                    <button onClick={() => setActiveTab('support')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'support' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <MessageSquare className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Destek</span>
+                    </button>
+                    <button onClick={() => setActiveTab('notifications')} className={"flex flex-col items-center gap-0.5 p-2 " + (activeTab === 'notifications' ? 'text-brand-primary' : 'text-slate-400')}>
+                        <Bell className="w-5 h-5" /><span className="text-[8px] font-bold leading-tight">Bildirim</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     )
 }
-
-
-
