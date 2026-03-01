@@ -1,5 +1,4 @@
 'use client'
-export const revalidate = 0;
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -21,13 +20,12 @@ type Device = {
 
 export default function UserDashboard() {
     const router = useRouter()
-    const { t, language, setLanguage } = useLanguage()
+    const { language, setLanguage } = useLanguage()
 
     const [activeTab, setActiveTab] = useState<'home' | 'map'>('home')
     const [showQrModal, setShowQrModal] = useState(false)
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [paymentProcessing, setPaymentProcessing] = useState(false)
-    const [newPassword, setNewPassword] = useState('')
     const [balance, setBalance] = useState(0)
     const [name, setName] = useState('')
     const [userId, setUserId] = useState<string | null>(null)
@@ -45,6 +43,9 @@ export default function UserDashboard() {
     const [chatReplies, setChatReplies] = useState<any[]>([])
     const [chatInput, setChatInput] = useState('')
     const [selectedNotification, setSelectedNotification] = useState<any | null>(null)
+    const [oldPassword, setOldPassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
 
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371
@@ -67,13 +68,11 @@ export default function UserDashboard() {
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-                () => { },
-                { enableHighAccuracy: true, timeout: 5000 }
+                () => { }, { enableHighAccuracy: true, timeout: 5000 }
             )
             navigator.geolocation.watchPosition(
                 (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-                () => { },
-                { enableHighAccuracy: true }
+                () => { }, { enableHighAccuracy: true }
             )
         }
         return () => { supabase.removeChannel(sub) }
@@ -129,22 +128,20 @@ export default function UserDashboard() {
     }
 
     const handleQrPayment = async () => {
-        if (!qrDeviceId) return alert('Lutfen makine secin.')
+        if (!qrDeviceId) return alert('L\u00fctfen makine se\u00e7in.')
         const device = devices.find(d => d.id === qrDeviceId)
-        if (!device) return alert('Gecersiz makine kodu.')
-        if (device.status !== 'online') return alert('Bu makine su anda hizmet veremiyor.')
+        if (!device) return alert('Ge\u00e7ersiz makine.')
+        if (device.status !== 'online') return alert('Bu makine \u015fu anda hizmet veremiyor.')
         const finalPrice = 50
-        if (balance < finalPrice) return alert('Bakiye yetersiz! Hizmet bedeli: ' + finalPrice + ' TL')
+        if (balance < finalPrice) return alert('Bakiye yetersiz!')
         setPaymentProcessing(true)
         try {
             const { error: balError } = await supabase.rpc('increment_balance', { amount: -finalPrice, user_id: userId })
             if (balError) throw balError
             await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme', status: 'completed' })
-            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'Odeme Basarili', message: device.name + ' cihazinda ' + finalPrice + ' TL odeme yapildi.' })
-            alert('Odeme basarili! Makine calismaya basliyor.')
-            setShowQrModal(false)
-            setQrDeviceId('')
-            setBalance(prev => prev - finalPrice)
+            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: '\u00d6deme Ba\u015far\u0131l\u0131', message: device.name + ' cihaz\u0131nda ' + finalPrice + ' TL \u00f6deme yap\u0131ld\u0131.' })
+            alert('\u00d6deme ba\u015far\u0131l\u0131! Makine \u00e7al\u0131\u015fmaya ba\u015fl\u0131yor.')
+            setShowQrModal(false); setQrDeviceId(''); setBalance(prev => prev - finalPrice)
         } catch (e: any) {
             alert('Hata: ' + e.message)
         } finally {
@@ -169,10 +166,15 @@ export default function UserDashboard() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (newPassword.length < 6) return alert('Sifre en az 6 karakter olmalidir.')
+        if (newPassword.length < 6) return alert('\u015eifre en az 6 karakter olmal\u0131d\u0131r.')
+        if (newPassword !== confirmPassword) return alert('Yeni \u015fifreler e\u015fle\u015fmiyor.')
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user?.email) return
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: oldPassword })
+        if (signInError) return alert('Eski \u015fifre yanl\u0131\u015f.')
         const { error } = await supabase.auth.updateUser({ password: newPassword })
-        if (error) { alert('Sifre guncellenirken hata: ' + error.message) }
-        else { alert('Sifreniz guncellendi.'); setNewPassword('') }
+        if (error) { alert('\u015eifre g\u00fcncellenirken hata: ' + error.message) }
+        else { alert('\u015eifreniz g\u00fcncellendi.'); setOldPassword(''); setNewPassword(''); setConfirmPassword('') }
     }
 
     const handleLogout = async () => { await supabase.auth.signOut(); router.push('/') }
@@ -189,11 +191,7 @@ export default function UserDashboard() {
         if (notif.metadata?.ticket_id) {
             const ticket = tickets.find(t => t.id === notif.metadata.ticket_id)
             if (ticket) { setSelectedTicket(ticket); fetchReplies(ticket.id); setSettingsTab('support'); setShowSettings(true); setShowNotifications(false) }
-        } else if (notif.title?.includes('Destek') || notif.title?.includes('Yanit')) {
-            setSettingsTab('support'); setShowSettings(true); setShowNotifications(false)
-        } else {
-            setSelectedNotification(notif)
-        }
+        } else { setSelectedNotification(notif) }
     }
 
     const markAllAsRead = async () => {
@@ -202,14 +200,18 @@ export default function UserDashboard() {
     }
 
     return (
-        <div className="min-h-screen pb-24 relative bg-slate-50 overflow-x-hidden">
-            <header className="px-4 pt-safe pt-4 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-30 border-b border-slate-100">
+        <div className="min-h-screen bg-slate-50" style={{ paddingBottom: '5rem' }}>
+            {/* Header */}
+            <header className="px-4 pt-4 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-30 border-b border-slate-100">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">{name.charAt(0).toUpperCase()}</div>
-                    <div><p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">{t('greeting')}</p><h1 className="text-lg font-bold text-slate-800 leading-none">{name}</h1></div>
+                    <div>
+                        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Merhaba</p>
+                        <h1 className="text-lg font-bold text-slate-800 leading-none">{name}</h1>
+                    </div>
                 </div>
                 <div className="flex gap-2">
-                    {isAdmin && <button onClick={() => router.push('/admin')} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200"><Sliders className="w-5 h-5" /></button>}
+                    {isAdmin && <button onClick={() => router.push('/admin')} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><Sliders className="w-5 h-5" /></button>}
                     <button onClick={() => setShowNotifications(true)} className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 relative">
                         <Bell className="w-5 h-5" />
                         {notifications.some(n => !n.is_read) && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
@@ -218,59 +220,66 @@ export default function UserDashboard() {
                 </div>
             </header>
 
-            <main className="px-4 space-y-4 mt-4 max-w-lg mx-auto">
-                <div className="w-full p-6 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+            {/* Main Content */}
+            <main className="px-4 pt-4 space-y-4">
+                {/* Balance Card */}
+                <div className="w-full p-6 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2">
-                            <span className="text-indigo-100 text-xs font-bold uppercase tracking-widest">CUZDANIM</span>
+                            <span className="text-indigo-100 text-xs font-bold uppercase tracking-widest">C\u00dcZDANIM</span>
                             <Wallet className="w-5 h-5 text-indigo-200" />
                         </div>
                         <h2 className="text-4xl font-black mb-6 tracking-tight">{balance} <span className="text-2xl font-medium opacity-80">TL</span></h2>
-                        <div className="flex gap-3">
-                            <button onClick={() => router.push('/user/wallet')} className="flex-1 py-3 bg-white/20 backdrop-blur-md rounded-xl text-sm font-bold hover:bg-white/30">+ Bakiye Ekle</button>
-                        </div>
+                        <button onClick={() => router.push('/user/wallet')} className="w-full py-3 bg-white/20 backdrop-blur-md rounded-xl text-sm font-bold hover:bg-white/30">
+                            + Bakiye Ekle
+                        </button>
                     </div>
                 </div>
 
-                {activeTab === 'map' ? /* MAP IS VISIBLE */ (
-                    <div className="h-[60vh] rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 relative">
+                {/* Map Tab */}
+                {activeTab === 'map' && (
+                    <div className="rounded-3xl overflow-hidden shadow-sm border border-slate-100" style={{ height: '55vh' }}>
                         <KioskMap userLocation={userLocation} kiosks={kiosks} />
                     </div>
-                ) : /* QR IS VISIBLE */ (
-                    <div className="w-full bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-                        <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                            <QrCode className="w-12 h-12" />
+                )}
+
+                {/* QR Payment - Home Tab */}
+                {activeTab === 'home' && (
+                    <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center py-10">
+                        <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                            <QrCode className="w-10 h-10" />
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR Odeme</h3>
-                        <p className="text-slate-500 text-center text-sm mb-8 max-w-xs leading-relaxed">
-                            Kask otomatinin uzerindeki QR kodu okutun veya makine kodunu girerek odemenizi yapin.
+                        <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR \u00d6deme</h3>
+                        <p className="text-slate-500 text-center text-sm mb-6 max-w-xs leading-relaxed">
+                            Kask otomatinin \u00fczerindeki QR kodu okutun veya makine kodunu girerek \u00f6demenizi yap\u0131n.
                         </p>
                         <button
                             onClick={() => setShowQrModal(true)}
-                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 text-base"
+                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
                         >
                             <QrCode className="w-5 h-5" />
-                            Kod Girerek Ode
+                            Kod Girerek \u00d6de
                         </button>
                     </div>
                 )}
             </main>
 
+            {/* QR Modal */}
             {showQrModal && (
                 <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQrModal(false)}></div>
                     <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10">
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-xl text-slate-800">QR Odeme</h3>
-                            <button onClick={() => setShowQrModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5" /></button>
+                            <h3 className="font-bold text-xl text-slate-800">QR \u00d6deme</h3>
+                            <button onClick={() => setShowQrModal(false)} className="p-2 bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Makine Sec</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Makine Se\u00e7</label>
                                 <select className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium" value={qrDeviceId} onChange={(e) => setQrDeviceId(e.target.value)}>
-                                    <option value="">Seciniz...</option>
+                                    <option value="">Se\u00e7iniz...</option>
                                     {devices.filter(d => d.status === 'online').map(d => (
                                         <option key={d.id} value={d.id}>{d.name} - 50 TL</option>
                                     ))}
@@ -281,17 +290,18 @@ export default function UserDashboard() {
                                 <span className="text-lg font-black text-indigo-700">{balance} TL</span>
                             </div>
                             <button onClick={handleQrPayment} disabled={paymentProcessing || !qrDeviceId} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
-                                {paymentProcessing ? 'Isleniyor...' : '50 TL Ode ve Baslat'}
+                                {paymentProcessing ? '\u0130\u015fleniyor...' : '50 TL \u00d6de ve Ba\u015flat'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* Settings Modal */}
             {showSettings && (
                 <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
-                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 pb-32 relative z-10 max-h-[85vh] overflow-y-auto flex flex-col">
+                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 overflow-y-auto flex flex-col" style={{ maxHeight: '80vh', paddingBottom: '2rem' }}>
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden shrink-0"></div>
                         {selectedTicket && (
                             <div className="mb-4 flex items-center gap-2">
@@ -302,8 +312,8 @@ export default function UserDashboard() {
                         {!selectedTicket ? (
                             <>
                                 <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-2 shrink-0">
-                                    <button onClick={() => setSettingsTab('account')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'account' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>{t('profileSettings')}</button>
-                                    <button onClick={() => setSettingsTab('support')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'support' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>{t('support')}</button>
+                                    <button onClick={() => setSettingsTab('account')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'account' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Profil Ayarlar\u0131</button>
+                                    <button onClick={() => setSettingsTab('support')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'support' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Destek</button>
                                 </div>
                                 {settingsTab === 'account' ? (
                                     <div className="space-y-4">
@@ -311,31 +321,33 @@ export default function UserDashboard() {
                                             <label className="text-xs font-bold text-slate-400 uppercase block">Ad Soyad</label>
                                             <div className="flex gap-2">
                                                 <input value={name} onChange={e => setName(e.target.value)} className="modern-input flex-1" placeholder="Ad Soyad" />
-                                                <button onClick={async () => { const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId); if (!error) alert('Profil guncellendi') }} className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
+                                                <button onClick={async () => { const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId); if (!error) alert('Profil g\u00fcncellendi') }} className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
                                             </div>
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                                            <label className="text-xs font-bold text-slate-400 uppercase block">Sifre Degistir</label>
-                                            <form onSubmit={handlePasswordChange} className="flex gap-2">
-                                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input flex-1" placeholder="Yeni sifre (min 6)" />
-                                                <button type="submit" className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
+                                            <label className="text-xs font-bold text-slate-400 uppercase block">\u015eifre De\u011fi\u015ftir</label>
+                                            <form onSubmit={handlePasswordChange} className="space-y-2">
+                                                <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="Eski \u015fifre" required />
+                                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni \u015fifre (min 6 karakter)" required />
+                                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni \u015fifre tekrar" required />
+                                                <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> \u015eifreyi G\u00fcncelle</button>
                                             </form>
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                            <label className="text-xs font-bold text-slate-400 uppercase mb-3 block">{t('language')}</label>
+                                            <label className="text-xs font-bold text-slate-400 uppercase mb-3 block">Dil</label>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <button onClick={() => setLanguage('tr')} className={'py-2 rounded-xl text-sm font-bold ' + (language === 'tr' ? 'bg-white shadow text-indigo-600' : 'text-slate-500')}>Turkce</button>
+                                                <button onClick={() => setLanguage('tr')} className={'py-2 rounded-xl text-sm font-bold ' + (language === 'tr' ? 'bg-white shadow text-indigo-600' : 'text-slate-500')}>T\u00fcrk\u00e7e</button>
                                                 <button onClick={() => setLanguage('en')} className={'py-2 rounded-xl text-sm font-bold ' + (language === 'en' ? 'bg-white shadow text-indigo-600' : 'text-slate-500')}>English</button>
                                             </div>
                                         </div>
-                                        <button onClick={handleLogout} className="w-full py-3 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition-colors">{t('logout')}</button>
+                                        <button onClick={handleLogout} className="w-full py-3 text-red-500 font-bold bg-red-50 rounded-xl hover:bg-red-100 transition-colors">\u00c7\u0131k\u0131\u015f Yap</button>
                                     </div>
-                                ) : /* QR IS VISIBLE */ (
+                                ) : (
                                     <div className="space-y-6">
                                         <form onSubmit={handleCreateTicket} className="space-y-3">
-                                            <input value={ticketSubject} onChange={e => setTicketSubject(e.target.value)} placeholder={t('ticketSubject')} className="modern-input" required />
-                                            <textarea value={ticketMessage} onChange={e => setTicketMessage(e.target.value)} placeholder={t('ticketMessage')} className="modern-input" rows={3} required />
-                                            <button type="submit" className="btn-primary w-full bg-emerald-500">{t('sendTicket')}</button>
+                                            <input value={ticketSubject} onChange={e => setTicketSubject(e.target.value)} placeholder="Konu" className="modern-input" required />
+                                            <textarea value={ticketMessage} onChange={e => setTicketMessage(e.target.value)} placeholder="Mesaj\u0131n\u0131z..." className="modern-input" rows={3} required />
+                                            <button type="submit" className="btn-primary w-full bg-emerald-500">Talep G\u00f6nder</button>
                                         </form>
                                         <div className="space-y-3">
                                             {tickets.map(ticket => (
@@ -351,23 +363,17 @@ export default function UserDashboard() {
                                     </div>
                                 )}
                             </>
-                        ) : /* QR IS VISIBLE */ (
-                            <div className="flex flex-col h-[70vh]">
+                        ) : (
+                            <div className="flex flex-col" style={{ height: '60vh' }}>
                                 <div className="flex-1 overflow-y-auto space-y-4 p-4">
                                     <div className="flex gap-3">
                                         <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">S</div>
-                                        <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">Baslangic Mesaji</p>{selectedTicket.message}</div>
+                                        <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">Ba\u015flang\u0131\u00e7 Mesaj\u0131</p>{selectedTicket.message}</div>
                                     </div>
-                                    {selectedTicket.admin_reply && chatReplies.length === 0 && (
-                                        <div className="flex gap-3 flex-row-reverse">
-                                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center text-xs font-bold text-indigo-600">A</div>
-                                            <div className="bg-indigo-50 p-3 rounded-2xl rounded-tr-none text-sm text-slate-700 max-w-[85%] border border-indigo-100"><p className="font-bold text-indigo-600 text-xs mb-1">Destek</p>{selectedTicket.admin_reply}</div>
-                                        </div>
-                                    )}
                                     {chatReplies.map(reply => (
                                         <div key={reply.id} className={'flex gap-3 ' + (!reply.is_admin ? 'justify-end' : '')}>
                                             {reply.is_admin && <div className="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center text-xs font-bold text-indigo-600">A</div>}
-                                            <div className={'p-3 rounded-2xl text-sm max-w-[85%] shadow-sm ' + (!reply.is_admin ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none')}>
+                                            <div className={'p-3 rounded-2xl text-sm max-w-[85%] shadow-sm ' + (!reply.is_admin ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none')}>
                                                 <p className={'font-bold text-xs mb-1 ' + (!reply.is_admin ? 'text-white/80' : 'text-indigo-600')}>{reply.is_admin ? 'Destek' : 'Ben'}</p>
                                                 {reply.message}
                                             </div>
@@ -376,7 +382,7 @@ export default function UserDashboard() {
                                     <div className="h-4" />
                                 </div>
                                 <div className="flex gap-2 p-4 border-t border-slate-100 shrink-0">
-                                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendReply()} placeholder="Mesajinizi yazin..." className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400" />
+                                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendReply()} placeholder="Mesaj\u0131n\u0131z\u0131 yaz\u0131n..." className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400" />
                                     <button onClick={handleSendReply} className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg active:scale-95"><Send className="w-5 h-5" /></button>
                                 </div>
                             </div>
@@ -385,10 +391,11 @@ export default function UserDashboard() {
                 </div>
             )}
 
+            {/* Notifications Modal */}
             {showNotifications && (
                 <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => { setShowNotifications(false); setSelectedNotification(null) }}></div>
-                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 max-h-[85vh] overflow-y-auto">
+                    <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10 overflow-y-auto" style={{ maxHeight: '80vh' }}>
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden"></div>
                         {selectedNotification ? (
                             <>
@@ -399,11 +406,11 @@ export default function UserDashboard() {
                                 <p className="text-slate-600 text-sm leading-relaxed">{selectedNotification.message}</p>
                                 <p className="text-xs text-slate-400 mt-4">{new Date(selectedNotification.created_at).toLocaleString('tr-TR')}</p>
                             </>
-                        ) : /* QR IS VISIBLE */ (
+                        ) : (
                             <>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-xl text-slate-800">Bildirimler</h3>
-                                    <button onClick={markAllAsRead} className="text-xs text-indigo-600 font-bold">Tumunu Oku</button>
+                                    <button onClick={markAllAsRead} className="text-xs text-indigo-600 font-bold">T\u00fcm\u00fcn\u00fc Oku</button>
                                 </div>
                                 <div className="space-y-2">
                                     {notifications.length === 0 && <p className="text-slate-400 text-center py-8 text-sm">Bildirim yok</p>}
@@ -425,23 +432,24 @@ export default function UserDashboard() {
                 </div>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 pt-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999]" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}>
-                <div className="flex justify-around items-center pb-2 px-2">
-                    <button className="flex flex-col items-center gap-1 p-2 w-20" onClick={() => setActiveTab('home')}>
-                        {activeTab === 'home' && <div className="w-10 h-0.5 bg-indigo-600 rounded-full mb-0.5"></div>}
+            {/* Bottom Navigation */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-[9999] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                <div className="flex justify-around items-center py-2 px-2">
+                    <button className="flex flex-col items-center gap-1 p-2 flex-1" onClick={() => setActiveTab('home')}>
+                        {activeTab === 'home' && <div className="w-10 h-0.5 bg-indigo-600 rounded-full"></div>}
                         <Activity className={'w-6 h-6 ' + (activeTab === 'home' ? 'text-indigo-600' : 'text-slate-400')} />
                         <span className={'text-[10px] font-bold ' + (activeTab === 'home' ? 'text-indigo-600' : 'text-slate-400')}>Ana Sayfa</span>
                     </button>
-                    <button className="flex flex-col items-center gap-1 p-2 w-20" onClick={() => setActiveTab('map')}>
-                        {activeTab === 'map' && <div className="w-10 h-0.5 bg-indigo-600 rounded-full mb-0.5"></div>}
+                    <button className="flex flex-col items-center gap-1 p-2 flex-1" onClick={() => setActiveTab('map')}>
+                        {activeTab === 'map' && <div className="w-10 h-0.5 bg-indigo-600 rounded-full"></div>}
                         <MapPin className={'w-6 h-6 ' + (activeTab === 'map' ? 'text-indigo-600' : 'text-slate-400')} />
                         <span className={'text-[10px] font-medium ' + (activeTab === 'map' ? 'text-indigo-600' : 'text-slate-400')}>Harita</span>
                     </button>
-                    <button onClick={() => router.push('/user/wallet')} className="flex flex-col items-center gap-1 p-2 w-20 text-slate-400 hover:text-indigo-600 transition-colors">
+                    <button onClick={() => router.push('/user/wallet')} className="flex flex-col items-center gap-1 p-2 flex-1 text-slate-400 hover:text-indigo-600 transition-colors">
                         <Wallet className="w-6 h-6" />
-                        <span className="text-[10px] font-medium">{t('wallet')}</span>
+                        <span className="text-[10px] font-medium">C\u00fczdan\u0131m</span>
                     </button>
-                    <button onClick={() => { setShowSettings(true); setSettingsTab('account') }} className="flex flex-col items-center gap-1 p-2 w-20 text-slate-400 hover:text-indigo-600 transition-colors">
+                    <button onClick={() => { setShowSettings(true); setSettingsTab('account') }} className="flex flex-col items-center gap-1 p-2 flex-1 text-slate-400 hover:text-indigo-600 transition-colors">
                         <User className="w-6 h-6" />
                         <span className="text-[10px] font-medium">Profil</span>
                     </button>
