@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -127,4 +127,31 @@ select {
     background-repeat: no-repeat;
     background-size: 1.5em 1.5em;
     padding-right: 2.5rem;
+}
+
+/* === Mobile Smooth Scroll === */
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollable containers get momentum scrolling on iOS */
+.overflow-y-auto,
+.overflow-y-scroll,
+[class*="overflow-y-"] {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Remove scroll snapping / step scrolling on touch */
+body {
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+main {
+  -webkit-overflow-scrolling: touch;
 }
