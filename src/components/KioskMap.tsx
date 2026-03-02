@@ -4,7 +4,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 // Pulse animation for markers
 const pulseStyles = `
@@ -80,6 +80,7 @@ function ChangeView({ center }: { center: [number, number] }) {
 }
 
 function AutoBounds({ kiosks, userLocation }: { kiosks: any[], userLocation: [number, number] }) {
+    const hasFit = useRef(false)
     const map = useMap()
 
     useEffect(() => {

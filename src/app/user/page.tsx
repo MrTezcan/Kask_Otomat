@@ -27,6 +27,7 @@ export default function UserDashboard() {
     const [activeTab, setActiveTab] = useState<'home' | 'map'>('home')
     const [showQrModal, setShowQrModal] = useState(false)
     const [showCameraScanner, setShowCameraScanner] = useState(false)
+    const [paymentConfirmDevice, setPaymentConfirmDevice] = useState<Device | null>(null)
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [paymentProcessing, setPaymentProcessing] = useState(false)
     const [balance, setBalance] = useState(0)
@@ -268,33 +269,95 @@ export default function UserDashboard() {
                 )}
             </main>
 
-            {/* QR Modal */}
-            {showQrModal && (
+            {/* QR Odeme Modal - Kamera Oncelikli */}
+            {showQrModal && !paymentConfirmDevice && (
                 <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center sm:p-4">
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowQrModal(false)}></div>
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => { setShowQrModal(false); setShowCameraScanner(false) }}></div>
                     <div className="bg-white w-full sm:max-w-md sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10">
-                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-xl text-slate-800">QR Ödeme</h3>
-                            <button onClick={() => setShowQrModal(false)} className="p-2 bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden"></div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-xl text-slate-800">QR ile Ode</h3>
+                            <button onClick={() => { setShowQrModal(false); setShowCameraScanner(false) }} className="p-2 bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="space-y-4">
+                            {/* Camera Scanner - auto open */}
+                            <QrScannerComponent
+                                onScan={(text) => {
+                                    const found = devices.find(d => d.id === text || d.name === text)
+                                    if (found) {
+                                        setPaymentConfirmDevice(found)
+                                    } else {
+                                        alert('Gecersiz QR kod. Lutfen cihaz QR kodunu okutun.')
+                                    }
+                                }}
+                                onClose={() => { setShowQrModal(false); setShowCameraScanner(false) }}
+                            />
+                            <div className="relative flex items-center gap-3">
+                                <div className="flex-1 h-px bg-slate-200" />
+                                <span className="text-xs text-slate-400 font-bold">or</span>
+                                <div className="flex-1 h-px bg-slate-200" />
+                            </div>
+                            {/* Manual fallback */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Makine Seç</label>
-                                <select className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium" value={qrDeviceId} onChange={(e) => setQrDeviceId(e.target.value)}>
-                                    <option value="">Seçiniz...</option>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manuel Makine Sec</label>
+                                <select className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium text-sm"
+                                    value={qrDeviceId}
+                                    onChange={(e) => {
+                                        const d = devices.find(dev => dev.id === e.target.value)
+                                        if (d) setPaymentConfirmDevice(d)
+                                    }}>
+                                    <option value="">Secim yapın...</option>
                                     {devices.filter(d => d.status === 'online').map(d => (
                                         <option key={d.id} value={d.id}>{d.name}</option>
                                     ))}
                                 </select>
                             </div>
-                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
-                                <span className="text-sm font-semibold text-indigo-700">Mevcut Bakiye</span>
-                                <span className="text-lg font-black text-indigo-700">{balance} TL</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Odeme Onay Modali */}
+            {paymentConfirmDevice && (
+                <div className="fixed inset-0 z-[10001] flex items-end sm:items-center justify-center sm:p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPaymentConfirmDevice(null)}></div>
+                    <div className="bg-white w-full sm:max-w-sm sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10">
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5 sm:hidden"></div>
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center">
+                                <QrCode className="w-8 h-8 text-indigo-600" />
                             </div>
-                            <button onClick={handleQrPayment} disabled={paymentProcessing || !qrDeviceId} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
-                                {paymentProcessing ? 'İşleniyor...' : (devices.find(d => d.id === qrDeviceId)?.hizmet_fiyati || 50) + ' TL Öde ve Başlat'}
-                            </button>
+                            <div>
+                                <p className="text-xs text-slate-400 font-bold uppercase mb-1">Makine</p>
+                                <h3 className="text-xl font-black text-slate-800">{paymentConfirmDevice.name}</h3>
+                            </div>
+                            <div className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500">Hizmet Ucreti</span>
+                                    <span className="font-black text-slate-800">{paymentConfirmDevice.hizmet_fiyati || 50} TL</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500">Mevcut Bakiye</span>
+                                    <span className={"font-bold " + (balance >= (paymentConfirmDevice.hizmet_fiyati || 50) ? 'text-emerald-600' : 'text-red-500')}>{balance} TL</span>
+                                </div>
+                                <div className="h-px bg-slate-200 my-1" />
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500">Odeme Sonrasi</span>
+                                    <span className="font-black text-slate-800">{balance - (paymentConfirmDevice.hizmet_fiyati || 50)} TL</span>
+                                </div>
+                            </div>
+                            {balance < (paymentConfirmDevice.hizmet_fiyati || 50) && (
+                                <p className="text-red-500 text-sm font-bold">Bakiyeniz yetersiz. Lutfen bakiye yukleyin.</p>
+                            )}
+                            <div className="w-full flex gap-3">
+                                <button onClick={() => setPaymentConfirmDevice(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl">Iptal</button>
+                                <button
+                                    onClick={handleQrPayment}
+                                    disabled={paymentProcessing || balance < (paymentConfirmDevice.hizmet_fiyati || 50)}
+                                    className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
+                                    {paymentProcessing ? 'Isleniyor...' : 'Onayla ve Basla'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
