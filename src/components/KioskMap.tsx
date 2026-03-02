@@ -1,10 +1,11 @@
+
 'use client'
 'use client'
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 
 // Pulse animation for markers
 const pulseStyles = `
@@ -79,8 +80,9 @@ function ChangeView({ center }: { center: [number, number] }) {
     return null
 }
 
+let _mapHasAutoFitted = false
+
 function AutoBounds({ kiosks, userLocation }: { kiosks: any[], userLocation: [number, number] }) {
-    const hasFit = useRef(false)
     const map = useMap()
 
     useEffect(() => {
