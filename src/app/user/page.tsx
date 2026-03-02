@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send } from 'lucide-react'
 import nextDynamic from 'next/dynamic'
@@ -45,6 +45,7 @@ export default function UserDashboard() {
     const [tickets, setTickets] = useState<any[]>([])
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null)
     const [chatReplies, setChatReplies] = useState<any[]>([])
+    const chatScrollRef = useRef<HTMLDivElement>(null)
     const [chatInput, setChatInput] = useState('')
     const [selectedNotification, setSelectedNotification] = useState<any | null>(null)
     const [oldPassword, setOldPassword] = useState('')
@@ -128,7 +129,7 @@ export default function UserDashboard() {
 
     const fetchReplies = async (ticketId: string) => {
         const { data } = await supabase.from('ticket_replies').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true })
-        if (data) setChatReplies(data)
+        if (data) { setChatReplies(data); setTimeout(() => { if (chatScrollRef.current) chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight }, 50) }
     }
 
     const handleQrPayment = async () => {
@@ -431,7 +432,7 @@ export default function UserDashboard() {
                             </>
                         ) : (
                             <div className="flex flex-col" style={{ height: '60vh' }}>
-                                <div className="flex-1 overflow-y-auto space-y-4 p-4">
+                                <div ref={chatScrollRef} className="flex-1 overflow-y-auto space-y-4 p-4">
                                     <div className="flex gap-3">
                                         <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-slate-500">S</div>
                                         <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-slate-700 max-w-[85%]"><p className="font-bold text-xs mb-1">Başlangıç Mesajı</p>{selectedTicket.message}</div>
