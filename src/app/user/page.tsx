@@ -243,11 +243,9 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Map Tab */}
-                {activeTab === 'map' && (
-                    <div className="rounded-3xl overflow-hidden shadow-sm border border-slate-100" style={{ height: '55vh' }}>
-                        <KioskMap userLocation={userLocation} kiosks={kiosks} />
-                    </div>
-                )}
+                <div className="rounded-3xl overflow-hidden shadow-sm border border-slate-100" style={{ height: '55vh', display: activeTab === 'map' ? 'block' : 'none' }}>
+                    <KioskMap userLocation={userLocation} kiosks={kiosks} />
+                </div>
 
                 {/* QR Payment - Home Tab */}
                 {activeTab === 'home' && (
