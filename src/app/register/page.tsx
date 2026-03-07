@@ -13,6 +13,7 @@ export default function Register() {
     const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', password: '' })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [success, setSuccess] = useState(false)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -23,14 +24,20 @@ export default function Register() {
         setLoading(true)
         setError(null)
 
-        const { data: isPhoneUnique, error: phoneCheckError } = await supabase.rpc('check_phone_unique', { phone_number: formData.phone })
-        if (!phoneCheckError && isPhoneUnique === false) {
-            setError('Bu telefon numarası zaten kullanımda.')
+        if (formData.password.length < 6) {
+            setError('Sifre en az 6 karakter olmalidir.')
             setLoading(false)
             return
         }
 
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: isPhoneUnique, error: phoneCheckError } = await supabase.rpc('check_phone_unique', { phone_number: formData.phone })
+        if (!phoneCheckError && isPhoneUnique === false) {
+            setError('Bu telefon numarasi zaten kullanimda.')
+            setLoading(false)
+            return
+        }
+
+        const { data, error: signUpError } = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
             options: { data: { full_name: formData.fullName, phone: formData.phone, role: 'customer' } },
@@ -38,16 +45,43 @@ export default function Register() {
 
         if (signUpError) {
             const msg = signUpError.message.toLowerCase()
-            if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already')) {
-                setError('Bu e-posta adresi zaten kullanımda.')
+            if (msg.includes('already registered') || msg.includes('user already') || msg.includes('already been registered')) {
+                setError('Bu e-posta adresi zaten kullanimda.')
+            } else if (msg.includes('password')) {
+                setError('Sifre gecersiz: ' + signUpError.message)
             } else {
-                setError('Kayıt hatası: ' + signUpError.message)
+                setError('Kayit hatasi: ' + signUpError.message)
             }
             setLoading(false)
-        } else {
-            setError('Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...')
-            setTimeout(() => router.push('/'), 2000)
+            return
         }
+
+        // Registration successful
+        if (data.session) {
+            // Auto-logged in (email confirmation disabled) - go directly to user dashboard
+            window.location.href = '/user'
+        } else {
+            // Email confirmation required
+            setSuccess(true)
+            setLoading(false)
+        }
+    }
+
+    if (success) {
+        return (
+            <main className="flex min-h-screen flex-col items-center justify-center p-6">
+                <div className="glass-card w-full max-w-md p-8 rounded-2xl text-center">
+                    <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Kayit Basarili!</h2>
+                    <p className="text-slate-400 text-sm mb-6">E-posta adresinize bir onay linki gonderdik. Lutfen e-postanizi kontrol edip hesabinizi onaylayin.</p>
+                    <button onClick={() => router.push('/')} className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold rounded-xl">
+                        Giris Sayfasina Git
+                    </button>
+                </div>
+            </main>
+        )
     }
 
     return (
@@ -69,7 +103,7 @@ export default function Register() {
                 <div className="flex flex-col items-center text-center mb-6">
                     <div className="mb-4"><Logo size="small" /></div>
                     <h1 className="text-2xl font-bold text-white tracking-tight">{t('registerTitle')}</h1>
-                    <p className="mt-1 text-slate-400 text-sm">Fresh-Rider dünyasına katılın</p>
+                    <p className="mt-1 text-slate-400 text-sm">Fresh-Rider dunyasina katilin</p>
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
@@ -77,7 +111,7 @@ export default function Register() {
                         <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1 tracking-wider">{t('fullName')}</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="h-4 w-4 text-slate-500" /></div>
-                            <input name="fullName" required className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600" placeholder="Örn: Ahmet Yılmaz" onChange={handleChange} />
+                            <input name="fullName" required className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600" placeholder="Ornek: Ahmet Yilmaz" onChange={handleChange} />
                         </div>
                     </div>
                     <div>
@@ -95,15 +129,15 @@ export default function Register() {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1 tracking-wider">Şifre</label>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1 tracking-wider">Sifre</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-4 w-4 text-slate-500" /></div>
-                            <input name="password" type="password" required placeholder="En az 6 karakter" className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600" onChange={handleChange} />
+                            <input name="password" type="password" required minLength={6} placeholder="En az 6 karakter" className="glass-input w-full !pl-11 rounded-lg py-2.5 text-sm placeholder:text-slate-600" onChange={handleChange} />
                         </div>
                     </div>
 
                     {error && (
-                        <div className={`p-3 text-xs rounded-lg border backdrop-blur-md ${error.includes('başarılı') ? 'text-emerald-300 bg-emerald-900/40 border-emerald-500/30' : 'text-red-300 bg-red-900/40 border-red-500/30'}`}>
+                        <div className="p-3 text-xs rounded-lg border backdrop-blur-md text-red-300 bg-red-900/40 border-red-500/30">
                             {error}
                         </div>
                     )}

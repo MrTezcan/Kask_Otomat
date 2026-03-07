@@ -32,7 +32,16 @@ export default function Home() {
         setError(null)
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) {
-            setError('Hata: ' + error.message)
+            const msg = error.message.toLowerCase()
+            if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
+                setError('E-posta veya sifre yanlis. Lutfen tekrar deneyin.')
+            } else if (msg.includes('email not confirmed')) {
+                setError('E-posta adresiniz henuz onaylanmamis. Lutfen e-postanizi kontrol edin.')
+            } else if (msg.includes('too many requests')) {
+                setError('Cok fazla giris denemesi. Lutfen bir sure bekleyin.')
+            } else {
+                setError('Giris hatasi: ' + error.message)
+            }
             setLoading(false)
         } else {
             if (rememberMe) {
