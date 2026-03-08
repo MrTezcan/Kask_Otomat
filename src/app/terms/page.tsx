@@ -78,7 +78,7 @@ export default function TermsPage() {
                         <li>Kullanicinin cihazinin calinmasi, kaybolmasi veya kotucul yazilima maruz kalmasi.</li>
                         <li>Kimlik avı (phishing) saldirilari sonucu bilgilerin ele gecirilmesi.</li>
                     </ul>
-                    <p>Kullanici, hesabina yetkisiz erisim fark ettiginde derhal uygulama ici destek sistemi veya <strong>destek@fresh-rider.com</strong> adresi araciligiyla Sirket'e bildirmekle yukumludur.</p>
+                    <p>Kullanici, hesabina yetkisiz erisim fark ettiginde derhal uygulama ici <strong>Destek</strong> bolumu uzerinden yazili beyan ile Sirket'e bildirmekle yukumludur.</p>
                 </Section>
 
                 <Section icon={CreditCard} title="Madde 5 — Odeme, Bakiye ve Iade Kosullari">
@@ -108,7 +108,7 @@ export default function TermsPage() {
                     <p>Sirket, <strong>6698 sayili Kisisel Verilerin Korunmasi Kanunu (KVKK)</strong> kapsaminda veri sorumlusu sifatiyla hareket eder.</p>
                     <p><strong>Toplanan veriler:</strong> Ad-soyad, telefon numarasi, e-posta adresi, konum bilgisi (kiosk secimi icin), odeme gecmisi ve uygulama kullanim loglari.</p>
                     <p><strong>Isleme amacları:</strong> Hizmetin yurütulmesi, musteri destegi, yasal yukumlulukler ve hizmet kalitesinin iyilestirilmesi. Kisisel veriler <strong>ticari amacla ucuncu taraflarla paylasilmaz.</strong></p>
-                    <p>Kullanici, KVKK'nin 11. maddesi kapsamindaki haklarini (bilgi talep etme, duzeltme, silme, islemeye itiraz) <strong>destek@fresh-rider.com</strong> adresine yazili basvuru ile kullanabilir.</p>
+                    <p>Kullanici, KVKK'nin 11. maddesi kapsamindaki haklarini (bilgi talep etme, duzeltme, silme, islemeye itiraz) uygulama ici <strong>Destek</strong> bolumu uzerinden yazili basvuru ile kullanabilir.</p>
                 </Section>
 
                 <Section icon={UserX} title="Madde 8 — Yasaklanan Kullanimlar ve Hesap Askiya Alma">
@@ -130,7 +130,7 @@ export default function TermsPage() {
 
                 <div className="mt-6 p-5 bg-white rounded-2xl border border-slate-200 text-center shadow-sm">
                     <p className="text-xs text-slate-500">Bu sozlesme <strong>08 Mart 2026</strong> tarihinde yururluge girmistir.</p>
-                    <p className="text-xs text-slate-500 mt-1">Sorular icin: <strong>destek@fresh-rider.com</strong></p>
+                    <p className="text-xs text-slate-500 mt-1">Sorular icin uygulama ici <strong>Destek</strong> bolumunu kullanabilirsiniz.</p>
                     <button onClick={() => router.back()} className="mt-4 px-8 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors active:scale-95">
                         Geri Don
                     </button>
