@@ -139,7 +139,7 @@ export default function Register() {
                     </div>
 
                     {/* Terms Checkbox - Required */}
-                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${termsAccepted ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/10 bg-white/5'}`}>
+                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${termsAccepted ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-500/50 bg-white/5'}`}>
                         <div className="relative flex-shrink-0 mt-0.5">
                             <input
                                 type="checkbox"
@@ -147,7 +147,7 @@ export default function Register() {
                                 onChange={(e) => { setTermsAccepted(e.target.checked); if (e.target.checked) setError(null) }}
                                 className="sr-only"
                             />
-                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${termsAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-white/30 bg-white/5'}`}>
+                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${termsAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-400 bg-white/10'}`}>
                                 {termsAccepted && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                             </div>
                         </div>
