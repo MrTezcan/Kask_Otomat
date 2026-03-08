@@ -11,6 +11,7 @@ export default function Register() {
     const router = useRouter()
     const { t, language, setLanguage } = useLanguage()
     const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', password: '' })
+    const [termsAccepted, setTermsAccepted] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
@@ -21,6 +22,10 @@ export default function Register() {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (!termsAccepted) {
+            setError('Devam etmek icin Kullanici Sozlesmesini kabul etmelisiniz.')
+            return
+        }
         setLoading(true)
         setError(null)
 
@@ -56,12 +61,9 @@ export default function Register() {
             return
         }
 
-        // Registration successful
         if (data.session) {
-            // Auto-logged in (email confirmation disabled) - go directly to user dashboard
             window.location.href = '/user'
         } else {
-            // Email confirmation required
             setSuccess(true)
             setLoading(false)
         }
@@ -136,13 +138,38 @@ export default function Register() {
                         </div>
                     </div>
 
+                    {/* Terms Checkbox - Required */}
+                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${termsAccepted ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/10 bg-white/5'}`}>
+                        <div className="relative flex-shrink-0 mt-0.5">
+                            <input
+                                type="checkbox"
+                                checked={termsAccepted}
+                                onChange={(e) => { setTermsAccepted(e.target.checked); if (e.target.checked) setError(null) }}
+                                className="sr-only"
+                            />
+                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${termsAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-white/30 bg-white/5'}`}>
+                                {termsAccepted && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                            </div>
+                        </div>
+                        <span className="text-xs text-slate-400 leading-relaxed">
+                            <button type="button" onClick={() => router.push('/terms')} className="text-indigo-400 hover:text-indigo-300 font-bold underline underline-offset-2">
+                                Kullanici Sozlesmesi ve Gizlilik Politikasini
+                            </button>
+                            {' '}okudum ve kabul ediyorum. Hesap guvenligimden tamamen ben sorumluyum.
+                        </span>
+                    </label>
+
                     {error && (
                         <div className="p-3 text-xs rounded-lg border backdrop-blur-md text-red-300 bg-red-900/40 border-red-500/30">
                             {error}
                         </div>
                     )}
 
-                    <button type="submit" disabled={loading} className="w-full flex justify-center py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2 disabled:opacity-70 disabled:grayscale">
+                    <button
+                        type="submit"
+                        disabled={loading || !termsAccepted}
+                        className="w-full flex justify-center py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
                         {loading ? t('loading') : t('registerButton')}
                     </button>
                 </form>
