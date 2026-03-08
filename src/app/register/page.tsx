@@ -155,7 +155,7 @@ export default function Register() {
                             <button type="button" onClick={() => router.push('/terms')} className="text-indigo-400 hover:text-indigo-300 font-bold underline underline-offset-2">
                                 Kullanici Sozlesmesi ve Gizlilik Politikasini
                             </button>
-                            {' '}okudum ve kabul ediyorum. Hesap guvenligimden tamamen ben sorumluyum.
+                            {' '}okudum ve kabul ediyorum.
                         </span>
                     </label>
 
