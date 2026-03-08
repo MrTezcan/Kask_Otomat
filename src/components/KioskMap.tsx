@@ -66,7 +66,7 @@ function FitOnce({ kiosks, userLocation }: { kiosks: any[], userLocation: [numbe
             const lng = k.lng || k.longitude
             if (lat && lng) bounds.extend([lat, lng])
         })
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 })
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [kiosks.length])
     return null
@@ -84,7 +84,7 @@ export default function KioskMap({ userLocation, kiosks }: { userLocation: [numb
             <MapContainer center={userLocation} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
                 <FitOnce kiosks={kiosks} userLocation={userLocation} />
                 <TileLayer attribution='&copy; <a href="https://carto.com/">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                <Marker position={userLocation} icon={userIcon}><Popup>Bu Senin Konumun</Popup></Marker>
+                <Marker position={userLocation} icon={userIcon}><Popup autoPan={false}>Bu Senin Konumun</Popup></Marker>
                 {kiosks.map((kiosk: any) => {
                     const lat = kiosk.lat || kiosk.latitude
                     const lng = kiosk.lng || kiosk.longitude
@@ -93,7 +93,7 @@ export default function KioskMap({ userLocation, kiosks }: { userLocation: [numb
                     const statusInfo = getStatusText(kiosk.status || 'online')
                     return (
                         <Marker key={kiosk.id} position={[lat, lng]} icon={getKioskIcon(kiosk.status || 'online', isNearest)}>
-                            <Popup>
+                            <Popup autoPan={false}>
                                 <div className="text-slate-800">
                                     <strong className="block text-sm">{kiosk.name}</strong>
                                     {isNearest && <div className="bg-cyan-100 text-cyan-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block my-1">EN YAKIN FRESH-RIDER</div>}
