@@ -67,6 +67,7 @@ export default function AdminDashboard() {
     const [balanceOperation, setBalanceOperation] = useState<'add' | 'subtract'>('add')
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
     const [customerSearch, setCustomerSearch] = useState('')
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
     // Edit/Add Kiosk
     const [showAddKioskModal, setShowAddKioskModal] = useState(false)
@@ -99,6 +100,7 @@ export default function AdminDashboard() {
             const { data: profile } = await supabase.from('profiles').select('role, full_name').eq('id', user.id).single()
             if (profile?.role !== 'admin' && !user.email?.includes('admin')) { router.push('/user'); return }
             setAdminName(profile?.full_name || user.email?.split('@')[0] || 'Admin')
+            setIsSuperAdmin(user?.email === 'ibo.tezcan42@gmail.com')
             await Promise.all([fetchDevices(), fetchCustomers(), fetchTransactions(), fetchTickets(), fetchSentNotifications()])
             setLoading(false)
         }
@@ -212,7 +214,8 @@ export default function AdminDashboard() {
     const handleDeleteKiosk = async (id: string) => { if (confirm('Silinsin mi?')) { await supabase.from('devices').delete().eq('id', id); fetchDevices() } }
     const handleDeleteUser = async (c: Customer) => {
         if (!confirm(c.full_name + ' adli kullanici silinsin mi? Bu islem geri alinamaz!')) return
-        const res = await fetch('/api/delete-user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: c.id }) })
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch('/api/delete-user', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session?.access_token }, body: JSON.stringify({ userId: c.id }) })
         if (res.ok) { alert('Kullanici silindi.'); fetchCustomers() }
         else { const d = await res.json(); alert('Hata: ' + (d.error || 'Silme basarisiz')) }
     }
@@ -700,7 +703,7 @@ const findCoordinates = () => {
                                         <div className="flex items-center gap-3 shrink-0">
                                             <span className="font-black text-brand-primary text-sm">{c.balance} &#8378;</span>
                                             <button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">Yonet</button>
-                                            <button onClick={() => handleDeleteUser(c)} className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Kullaniciyi sil"><Trash2 className="w-3.5 h-3.5" /></button>
+                                            {isSuperAdmin && <button onClick={() => handleDeleteUser(c)} className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Kullaniciyi sil"><Trash2 className="w-3.5 h-3.5" /></button>}
                                         </div>
                                     </div>
                                 ))}
@@ -718,7 +721,7 @@ const findCoordinates = () => {
                                                 <td className="p-4 font-bold text-slate-700">{c.full_name}</td>
                                                 <td className="p-4 text-slate-500"><div className="flex flex-col"><span className="text-xs">{c.email}</span><span className="text-[10px]">{c.phone || '-'}</span></div></td>
                                                 <td className="p-4 font-black text-brand-primary">{c.balance} &#8378;</td>
-                                                <td className="p-4 text-right"><div className="flex items-center justify-end gap-2"><button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600 transition-colors">Yonet</button><button onClick={() => handleDeleteUser(c)} className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Kullaniciyi sil"><Trash2 className="w-3.5 h-3.5" /></button></div></td>
+                                                <td className="p-4 text-right"><div className="flex items-center justify-end gap-2"><button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600 transition-colors">Yonet</button>{isSuperAdmin && <button onClick={() => handleDeleteUser(c)} className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Kullaniciyi sil"><Trash2 className="w-3.5 h-3.5" /></button>}</div></td>
                                             </tr>
                                         ))}
                                     </tbody>
