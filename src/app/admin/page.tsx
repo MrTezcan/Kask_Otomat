@@ -210,6 +210,12 @@ export default function AdminDashboard() {
         if (!error) { alert('Kaydedildi'); setShowAddKioskModal(false); setEditingDevice(null); fetchDevices() }
     }
     const handleDeleteKiosk = async (id: string) => { if (confirm('Silinsin mi?')) { await supabase.from('devices').delete().eq('id', id); fetchDevices() } }
+    const handleDeleteUser = async (c: Customer) => {
+        if (!confirm(c.full_name + ' adli kullanici silinsin mi? Bu islem geri alinamaz!')) return
+        const res = await fetch('/api/delete-user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: c.id }) })
+        if (res.ok) { alert('Kullanici silindi.'); fetchCustomers() }
+        else { const d = await res.json(); alert('Hata: ' + (d.error || 'Silme basarisiz')) }
+    }
 
     const handleUpdateStatus = async (id: string, status: string) => {
         const { error } = await supabase.from('devices').update({ status }).eq('id', id)
@@ -694,6 +700,7 @@ const findCoordinates = () => {
                                         <div className="flex items-center gap-3 shrink-0">
                                             <span className="font-black text-brand-primary text-sm">{c.balance} &#8378;</span>
                                             <button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600">Yonet</button>
+                                            <button onClick={() => handleDeleteUser(c)} className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Kullaniciyi sil"><Trash2 className="w-3.5 h-3.5" /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -711,7 +718,7 @@ const findCoordinates = () => {
                                                 <td className="p-4 font-bold text-slate-700">{c.full_name}</td>
                                                 <td className="p-4 text-slate-500"><div className="flex flex-col"><span className="text-xs">{c.email}</span><span className="text-[10px]">{c.phone || '-'}</span></div></td>
                                                 <td className="p-4 font-black text-brand-primary">{c.balance} &#8378;</td>
-                                                <td className="p-4 text-right"><button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600 transition-colors">Yonet</button></td>
+                                                <td className="p-4 text-right"><div className="flex items-center justify-end gap-2"><button onClick={() => { setSelectedCustomer(c); setShowBalanceModal(true) }} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-600 transition-colors">Yonet</button><button onClick={() => handleDeleteUser(c)} className="p-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-red-500 transition-colors" title="Kullaniciyi sil"><Trash2 className="w-3.5 h-3.5" /></button></div></td>
                                             </tr>
                                         ))}
                                     </tbody>
