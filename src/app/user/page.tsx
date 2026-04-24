@@ -19,6 +19,7 @@ type Device = {
     status: 'online' | 'offline' | 'maintenance'
     hizmet_fiyati: number
     last_seen?: string
+    parfum_fiyati?: number
 }
 
 export default function UserDashboard() {
@@ -165,7 +166,7 @@ export default function UserDashboard() {
             const { data: cmdData, error: cmdError } = await supabase.from('device_commands').insert({
                 device_id: device.id,
                 command: 'START_WASH',
-                payload: { perfume: qrWantsPerfume, amount: finalPrice }
+                payload: { perfume: qrWantsPerfume, amount: finalPrice, perfume_price: (device.parfum_fiyati || 5) }
             }).select();
 
             if (cmdError) throw cmdError;

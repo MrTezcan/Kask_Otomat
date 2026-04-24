@@ -11,7 +11,8 @@ import { useLanguage } from '@/context/LanguageContext'
 const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
-type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; kiosk_video_url?: string; }
+type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number
+    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; kiosk_video_url?: string; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
     // Edit/Add Kiosk
     const [showAddKioskModal, setShowAddKioskModal] = useState(false)
     const [editingDevice, setEditingDevice] = useState<Device | null>(null)
-    const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState('');
+    const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState('');; const [newKioskVideoUrl, setNewKioskVideoUrl] = useState('');
     const [addrProvince, setAddrProvince] = useState(''); const [addrDistrict, setAddrDistrict] = useState(''); const [addrStreet, setAddrStreet] = useState(''); const [isGeocoding, setIsGeocoding] = useState(false)
 
     // Notification State
@@ -800,7 +801,7 @@ const findCoordinates = () => {
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-4">
                                 <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Cihaz Adi</label><input value={newKioskName} onChange={e => setNewKioskName(e.target.value)} className="modern-input" /></div>
-                                <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Hizmet Fiyati (TL)</label><input type="number" value={newKioskPrice} onChange={e => setNewKioskPrice(e.target.value)} className="modern-input" /></div><div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tablet Bekleme Videosu URL</label><input type="text" value={newKioskVideoUrl} onChange={e => setNewKioskVideoUrl(e.target.value)} className="modern-input" placeholder="https://..." /></div>
+                                <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Hizmet Fiyati (TL)</label><input type="number" value={newKioskPrice} onChange={e => setNewKioskPrice(e.target.value)} className="modern-input" /></div><div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tablet Bekleme Videosu URL</label><input type="text" value={newKioskVideoUrl} onChange={e => setNewKioskVideoUrl(e.target.value)} className="modern-input" placeholder="https://..." /></div><div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tablet Bekleme Videosu URL</label><input type="text" value={newKioskVideoUrl} onChange={e => setNewKioskVideoUrl(e.target.value)} className="modern-input" placeholder="https://..." /></div>
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3"><p className="text-xs font-bold text-slate-400 uppercase">Adres Bul</p><div className="grid grid-cols-2 gap-2"><input value={addrProvince} onChange={e => setAddrProvince(e.target.value)} placeholder="Il" className="modern-input text-xs" /><input value={addrDistrict} onChange={e => setAddrDistrict(e.target.value)} placeholder="Ilce" className="modern-input text-xs" /></div><input value={addrStreet} onChange={e => setAddrStreet(e.target.value)} placeholder="Cadde/Sokak" className="modern-input text-xs" /><button onClick={findCoordinates} disabled={isGeocoding} className="w-full py-2 bg-brand-primary/10 text-brand-primary font-bold text-xs rounded-lg hover:bg-brand-primary/20">{isGeocoding ? 'Araniyor...' : 'Konumu Bul'}</button></div>
                                 <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tam Adres</label><textarea value={newKioskAddress} onChange={e => setNewKioskAddress(e.target.value)} className="modern-input text-xs" rows={2} /></div>
                                 <button onClick={handleSaveKiosk} className="w-full btn-primary">{editingDevice ? 'Guncelle' : 'Kaydet'}</button>
