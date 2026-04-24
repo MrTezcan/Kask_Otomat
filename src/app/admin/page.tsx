@@ -93,6 +93,7 @@ export default function AdminDashboard() {
     const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false)
     const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
     const [bulkUpdateValue, setBulkUpdateValue] = useState('')
+    const [bulkPerfumeUpdateValue, setBulkPerfumeUpdateValue] = useState('')
 
     useEffect(() => {
         const init = async () => {
