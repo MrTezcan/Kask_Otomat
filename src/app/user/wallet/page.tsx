@@ -1,4 +1,4 @@
-'use client'
+ï»¿'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -104,7 +104,7 @@ export default function WalletPage() {
         e.preventDefault()
 
         if (cardNumber.replace(/\s/g, '').length !== 16 || !isValidLuhn(cardNumber.replace(/\s/g, ''))) {
-            alert("Lütfen geçerli bir kredi kartý numarasý giriniz.");
+            alert("LÃ¼tfen geÃ§erli bir kredi kartÄ± numarasÄ± giriniz.");
             return;
         }
 
@@ -286,12 +286,12 @@ export default function WalletPage() {
                                     </div>
                                 </div>
                                 <div className="text-xl font-mono text-slate-800 tracking-widest mb-6 drop-shadow-md">
-                                    {cardNumber || '•••• •••• •••• ••••'}
+                                    {cardNumber || 'â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢'}
                                 </div>
                                 <div className="flex justify-between items-end">
                                     <div>
                                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">{t('cardHolder')}</p>
-                                        <p className="text-sm font-medium text-slate-800 tracking-wider uppercase truncate max-w-[150px]">{cardHolderName || (language === 'tr' ? 'ÝSÝM SOYAD' : 'NAME SURNAME')}</p>
+                                        <p className="text-sm font-medium text-slate-800 tracking-wider uppercase truncate max-w-[150px]">{cardHolderName || (language === 'tr' ? 'Ä°SÄ°M SOYAD' : 'NAME SURNAME')}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">{t('expiry')}</p>
@@ -315,7 +315,7 @@ export default function WalletPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs text-slate-500 font-bold ml-1 mb-1 block">{t('expiry')}</label>
-                                    <input required maxLength={5} className="glass-input w-full p-4 rounded-xl text-center" placeholder={language === 'tr' ? 'Ay/Yýl' : 'MM/YY'} value={expiry} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2, 4); setExpiry(v); }} />
+                                    <input required maxLength={5} className="glass-input w-full p-4 rounded-xl text-center" placeholder={language === 'tr' ? 'Ay/YÄ±l' : 'MM/YY'} value={expiry} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2, 4); setExpiry(v); }} />
                                 </div>
                                 <div>
                                     <label className="text-xs text-slate-500 font-bold ml-1 mb-1 block">{t('cvv')}</label>
@@ -350,7 +350,7 @@ export default function WalletPage() {
                                         onClick={() => setLanguage('tr')}
                                         className={`flex items-center justify-between px-4 py-4 rounded-2xl border transition-all ${language === 'tr' ? 'bg-brand-primary/20 border-brand-primary text-slate-800' : 'bg-white border border-slate-100 shadow-sm border-slate-100 text-slate-500 hover:bg-slate-50'}`}
                                     >
-                                        <span className="font-bold text-sm">Türkçe</span>
+                                        <span className="font-bold text-sm">TÃ¼rkÃ§e</span>
                                         {language === 'tr' && <Check className="w-4 h-4 text-brand-primary" />}
                                     </button>
                                     <button
@@ -382,5 +382,6 @@ export default function WalletPage() {
         </div>
     )
 }
+
 
 
