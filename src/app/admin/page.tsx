@@ -207,7 +207,7 @@ export default function AdminDashboard() {
 
     const handleSaveKiosk = async () => {
         if (!newKioskLocation || !newKioskName) return alert('Lutfen tum alanlari doldurun')
-        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), last_seen: new Date().toISOString() }
+        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), last_seen: new Date().toISOString(), video_url: newKioskVideoUrl }
         let error;
         if (editingDevice) {
              const res = await supabase.from('devices').update(data).eq('id', editingDevice.id)
