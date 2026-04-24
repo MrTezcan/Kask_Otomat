@@ -768,20 +768,31 @@ const findCoordinates = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => (
                                 <div key={device.id} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-brand-primary/30 transition-all group shadow-sm hover:shadow-md relative">
+                                    
                                     <div className="flex justify-between items-start mb-4">
-                                        <div><h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors">{device.name}</h3><p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {device.location}</p></div>
-                                        <div className="relative">
-                                            <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity ${device.status === 'online' ? 'bg-emerald-100 text-emerald-700' : device.status === 'offline' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                                                {device.status} <ChevronDown className="w-3 h-3" />
-                                            </button>
-                                            {showStatusMenu === device.id && (
-                                                <div className="absolute right-0 top-6 bg-white border border-slate-100 rounded-xl shadow-lg p-1 z-30 min-w-[100px]">
-                                                    <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg">Online</button>
-                                                    <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-amber-50 text-amber-600 rounded-lg">Bakim</button>
-                                                    <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-red-50 text-red-600 rounded-lg">Offline</button>
-                                                </div>
-                                            )}
+                                        <div>
+                                            <h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors">{device.name}</h3>
+                                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {device.location}</p>
                                         </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <div className="relative">
+                                                <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity ${device.status === 'online' ? 'bg-emerald-100 text-emerald-700' : device.status === 'offline' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                    {device.status} <ChevronDown className="w-3 h-3" />
+                                                </button>
+                                                {showStatusMenu === device.id && (
+                                                    <div className="absolute right-0 top-6 bg-white border border-slate-100 rounded-xl shadow-lg p-1 z-30 min-w-[100px]">
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg">Online</button>
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-amber-50 text-amber-600 rounded-lg">Bakim</button>
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-red-50 text-red-600 rounded-lg">Offline</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${device.work_status === 'idle' || !device.work_status ? 'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-700'}`}>
+                                                Makine: {device.work_status || 'bosta'}
+                                            </span>
+                                        </div>
+                                    </div>
+
                                     </div>
                                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
                                         <div className="flex flex-col gap-1">
@@ -827,7 +838,19 @@ const findCoordinates = () => {
                                     <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Hizmet Fiyati (TL)</label><input type="number" value={newKioskPrice} onChange={e => setNewKioskPrice(e.target.value)} className="modern-input" /></div>
                                     <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Parfum Fiyati (TL)</label><input type="number" value={newKioskPerfumePrice} onChange={e => setNewKioskPerfumePrice(e.target.value)} className="modern-input" /></div>
                                 </div>
-                                <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tablet Bekleme Videosu URL</label><input type="text" value={newKioskVideoUrl} onChange={e => setNewKioskVideoUrl(e.target.value)} className="modern-input" placeholder="https://..." /></div>
+                                
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tablet Bekleme Videosu URL</label>
+                                    <div className="flex gap-2">
+                                        <input type="text" value={newKioskVideoUrl} onChange={e => setNewKioskVideoUrl(e.target.value)} className="modern-input flex-1" placeholder="https://..." />
+                                        {newKioskVideoUrl && (
+                                            <a href={newKioskVideoUrl} target="_blank" rel="noreferrer" className="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 flex items-center justify-center" title="Videoyu Ac">
+                                                <Eye className="w-4 h-4 text-slate-600" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3"><p className="text-xs font-bold text-slate-400 uppercase">Adres Bul</p><div className="grid grid-cols-2 gap-2"><input value={addrProvince} onChange={e => setAddrProvince(e.target.value)} placeholder="Il" className="modern-input text-xs" /><input value={addrDistrict} onChange={e => setAddrDistrict(e.target.value)} placeholder="Ilce" className="modern-input text-xs" /></div><input value={addrStreet} onChange={e => setAddrStreet(e.target.value)} placeholder="Cadde/Sokak" className="modern-input text-xs" /><button onClick={findCoordinates} disabled={isGeocoding} className="w-full py-2 bg-brand-primary/10 text-brand-primary font-bold text-xs rounded-lg hover:bg-brand-primary/20">{isGeocoding ? 'Araniyor...' : 'Konumu Bul'}</button></div>
                                 <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tam Adres</label><textarea value={newKioskAddress} onChange={e => setNewKioskAddress(e.target.value)} className="modern-input text-xs" rows={2} /></div>
                                 <button onClick={handleSaveKiosk} className="w-full btn-primary">{editingDevice ? 'Guncelle' : 'Kaydet'}</button>
