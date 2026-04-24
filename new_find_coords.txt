@@ -1,0 +1,22 @@
+    const findCoordinates = () => {
+        if (!navigator.geolocation) return alert('Cihaziniz konum desteklemiyor.')
+        setIsGeocoding(true)
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude
+                const lng = pos.coords.longitude
+                setNewKioskLocation([lat, lng])
+                try {
+                    const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=tr')
+                    const data = await res.json()
+                    if (data?.display_name) setNewKioskAddress(data.display_name)
+                } catch (e) {}
+                setIsGeocoding(false)
+            },
+            (err) => {
+                alert('Konum alinamadi: ' + err.message)
+                setIsGeocoding(false)
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        )
+    }

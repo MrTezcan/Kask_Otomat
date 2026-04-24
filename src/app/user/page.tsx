@@ -29,6 +29,8 @@ export default function UserDashboard() {
     const [showCameraScanner, setShowCameraScanner] = useState(false)
     const [paymentConfirmDevice, setPaymentConfirmDevice] = useState<Device | null>(null)
     const [qrDeviceId, setQrDeviceId] = useState('')
+    const [qrDynamicAmount, setQrDynamicAmount] = useState<number | null>(null)
+    const [qrWantsPerfume, setQrWantsPerfume] = useState<boolean>(false)
     const [paymentProcessing, setPaymentProcessing] = useState(false)
     const [balance, setBalance] = useState(0)
     const [name, setName] = useState('')
@@ -133,20 +135,25 @@ export default function UserDashboard() {
     }
 
     const handleQrPayment = async () => {
-        if (!qrDeviceId) return alert('Lütfen makine seçin.')
-        const device = devices.find(d => d.id === qrDeviceId)
+        const device = paymentConfirmDevice || devices.find(d => d.id === qrDeviceId)
+        if (!device) return alert('Lütfen makine seçin.')
         if (!device) return alert('Geçersiz makine.')
         if (device.status !== 'online') return alert('Bu makine şu anda hizmet veremiyor.')
-        const finalPrice = device.hizmet_fiyati || 50
+        const finalPrice = qrDynamicAmount || device.hizmet_fiyati || 50
         if (balance < finalPrice) return alert('Bakiye yetersiz!')
         setPaymentProcessing(true)
         try {
             const { error: balError } = await supabase.rpc('increment_balance', { amount: -finalPrice, user_id: userId })
             if (balError) throw balError
-            await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme', status: 'completed' })
+            await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme' + (qrWantsPerfume ? ' + Parfüm' : ''), status: 'completed' })
             await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'Ödeme Başarılı', message: device.name + ' cihazında ' + finalPrice + ' TL ödeme yapıldı.' })
+            await supabase.from('device_commands').insert({
+                device_id: device.id,
+                command: 'START_WASH',
+                payload: { perfume: qrWantsPerfume, amount: finalPrice }
+            });
             alert('Ödeme başarılı! Makine çalışmaya başlıyor.')
-            setShowQrModal(false); setQrDeviceId(''); setBalance(prev => prev - finalPrice)
+            setShowQrModal(false); setQrDeviceId(''); setQrDynamicAmount(null); setQrWantsPerfume(false); setPaymentConfirmDevice(null); setBalance(prev => prev - finalPrice)
         } catch (e: any) {
             alert('Hata: ' + e.message)
         } finally {
@@ -282,7 +289,21 @@ export default function UserDashboard() {
                             {/* Camera Scanner - auto open */}
                             <QrScannerComponent
                                 onScan={(text) => {
-                                    const found = devices.find(d => d.id === text || d.name === text)
+                                    let deviceIdToFind = text;
+                                    if (text.startsWith('freshrider://pay')) {
+                                        try {
+                                            const urlObj = new URL(text.replace('freshrider://', 'http://localhost/'));
+                                            deviceIdToFind = urlObj.searchParams.get('device_id') || '';
+                                            const amount = urlObj.searchParams.get('amount');
+                                            const perfume = urlObj.searchParams.get('perfume');
+                                            if (amount) setQrDynamicAmount(Number(amount));
+                                            setQrWantsPerfume(perfume === 'true');
+                                        } catch (e) { console.error(e); }
+                                    } else {
+                                        setQrDynamicAmount(null);
+                                        setQrWantsPerfume(false);
+                                    }
+                                    const found = devices.find(d => d.id === deviceIdToFind || d.name === deviceIdToFind)
                                     if (found) {
                                         setPaymentConfirmDevice(found)
                                     } else {
@@ -332,27 +353,27 @@ export default function UserDashboard() {
                             </div>
                             <div className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Hizmet Ucreti</span>
-                                    <span className="font-black text-slate-800">{paymentConfirmDevice.hizmet_fiyati || 50} TL</span>
+                                    <span className="text-slate-500">Hizmet Ucreti {qrWantsPerfume ? '(Parfümlü)' : ''}</span>
+                                    <span className="font-black text-slate-800">{qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50} TL</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-500">Mevcut Bakiye</span>
-                                    <span className={"font-bold " + (balance >= (paymentConfirmDevice.hizmet_fiyati || 50) ? 'text-emerald-600' : 'text-red-500')}>{balance} TL</span>
+                                    <span className={"font-bold " + (balance >= (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50) ? 'text-emerald-600' : 'text-red-500')}>{balance} TL</span>
                                 </div>
                                 <div className="h-px bg-slate-200 my-1" />
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-500">Odeme Sonrasi</span>
-                                    <span className="font-black text-slate-800">{balance - (paymentConfirmDevice.hizmet_fiyati || 50)} TL</span>
+                                    <span className="font-black text-slate-800">{balance - (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50)} TL</span>
                                 </div>
                             </div>
-                            {balance < (paymentConfirmDevice.hizmet_fiyati || 50) && (
+                            {balance < (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50) && (
                                 <p className="text-red-500 text-sm font-bold">Bakiyeniz yetersiz. Lutfen bakiye yukleyin.</p>
                             )}
                             <div className="w-full flex gap-3">
                                 <button onClick={() => setPaymentConfirmDevice(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl">Iptal</button>
                                 <button
                                     onClick={handleQrPayment}
-                                    disabled={paymentProcessing || balance < (paymentConfirmDevice.hizmet_fiyati || 50)}
+                                    disabled={paymentProcessing || balance < (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50)}
                                     className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
                                     {paymentProcessing ? 'Isleniyor...' : 'Onayla ve Basla'}
                                 </button>
