@@ -207,9 +207,24 @@ export default function AdminDashboard() {
 
     const handleSaveKiosk = async () => {
         if (!newKioskLocation || !newKioskName) return alert('Lutfen tum alanlari doldurun')
-        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), last_seen: new Date().toISOString(), kiosk_video_url: newKioskVideoUrl }
-        const { error } = editingDevice ? await supabase.from('devices').update(data).eq('id', editingDevice.id) : await supabase.from('devices').insert([{ ...data, status: 'online' }])
-        if (!error) { alert('Kaydedildi'); setShowAddKioskModal(false); setEditingDevice(null); fetchDevices() }
+        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), last_seen: new Date().toISOString() }
+        let error;
+        if (editingDevice) {
+             const res = await supabase.from('devices').update(data).eq('id', editingDevice.id)
+             error = res.error
+        } else {
+             const res = await supabase.from('devices').insert([{ ...data, status: 'online' }])
+             error = res.error
+        }
+        if (!error) { 
+             alert('Kaydedildi'); 
+             setShowAddKioskModal(false); 
+             setEditingDevice(null); 
+             fetchDevices() 
+        } else {
+             alert('Hata olustu: ' + error.message)
+             console.error('Supabase Error:', error)
+        }
     }
     const handleDeleteKiosk = async (id: string) => { if (confirm('Silinsin mi?')) { await supabase.from('devices').delete().eq('id', id); fetchDevices() } }
     const handleDeleteUser = async (c: Customer) => {
