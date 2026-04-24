@@ -18,6 +18,7 @@ type Device = {
     longitude?: number
     status: 'online' | 'offline' | 'maintenance'
     hizmet_fiyati: number
+    last_seen?: string
 }
 
 export default function UserDashboard() {
@@ -31,7 +32,7 @@ export default function UserDashboard() {
     const [qrDeviceId, setQrDeviceId] = useState('')
     const [qrDynamicAmount, setQrDynamicAmount] = useState<number | null>(null)
     const [qrWantsPerfume, setQrWantsPerfume] = useState<boolean>(false)
-    const [paymentProcessing, setPaymentProcessing] = useState(false)
+    const [paymentProcessing, setPaymentProcessing] = useState<string | false>(false)
     const [balance, setBalance] = useState(0)
     const [name, setName] = useState('')
     const [userId, setUserId] = useState<string | null>(null)
@@ -137,25 +138,83 @@ export default function UserDashboard() {
     const handleQrPayment = async () => {
         const device = paymentConfirmDevice || devices.find(d => d.id === qrDeviceId)
         if (!device) return alert('Lütfen makine seçin.')
-        if (!device) return alert('Geçersiz makine.')
         if (device.status !== 'online') return alert('Bu makine şu anda hizmet veremiyor.')
+        
+        // Cihaz çevrimdışı kontrolü (5 dakikadan eski ping)
+        if (device.last_seen) {
+            const lastSeenDate = new Date(device.last_seen);
+            const now = new Date();
+            if (now.getTime() - lastSeenDate.getTime() > 5 * 60 * 1000) {
+                return alert('Makine ile bağlantı kurulamıyor. Makine kapalı veya interneti kesik olabilir.');
+            }
+        }
+
         const finalPrice = qrDynamicAmount || device.hizmet_fiyati || 50
         if (balance < finalPrice) return alert('Bakiye yetersiz!')
-        setPaymentProcessing(true)
+        
+        setPaymentProcessing('processing')
         try {
+            // 1. Bakiyeyi çek
             const { error: balError } = await supabase.rpc('increment_balance', { amount: -finalPrice, user_id: userId })
             if (balError) throw balError
+            
+            // 2. İşlemi kaydet
             await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme' + (qrWantsPerfume ? ' + Parfüm' : ''), status: 'completed' })
-            await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'Ödeme Başarılı', message: device.name + ' cihazında ' + finalPrice + ' TL ödeme yapıldı.' })
-            await supabase.from('device_commands').insert({
+            
+            // 3. Komutu gönder
+            const { data: cmdData, error: cmdError } = await supabase.from('device_commands').insert({
                 device_id: device.id,
                 command: 'START_WASH',
                 payload: { perfume: qrWantsPerfume, amount: finalPrice }
+            }).select();
+
+            if (cmdError) throw cmdError;
+
+            // 4. Bağlantı Bekleme (Handshake)
+            setPaymentProcessing('connecting');
+            
+            const handshakeResult = await new Promise((resolve) => {
+                let timeoutId = setTimeout(() => {
+                    resolve('timeout');
+                }, 30000); // 30 saniye bekle
+
+                const channel = supabase.channel('wait_device_' + device.id)
+                    .on('postgres_changes', { 
+                        event: 'UPDATE', 
+                        schema: 'public', 
+                        table: 'devices',
+                        filter: 'id=eq.' + device.id
+                    }, (payload) => {
+                        if (payload.new.status === 'washing') {
+                            clearTimeout(timeoutId);
+                            resolve('success');
+                        }
+                    })
+                    .subscribe();
             });
-            alert('Ödeme başarılı! Makine çalışmaya başlıyor.')
-            setShowQrModal(false); setQrDeviceId(''); setQrDynamicAmount(null); setQrWantsPerfume(false); setPaymentConfirmDevice(null); setBalance(prev => prev - finalPrice)
+
+            supabase.removeAllChannels(); // Dinlemeyi kapat
+
+            if (handshakeResult === 'timeout') {
+                // İADE İŞLEMİ (REFUND)
+                setPaymentProcessing('refunding');
+                await supabase.rpc('increment_balance', { amount: finalPrice, user_id: userId });
+                await supabase.from('transactions').insert({ user_id: userId, amount: finalPrice, type: 'deposit', description: 'İade: Makine Yanıt Vermedi', status: 'completed' });
+                await supabase.from('device_commands').update({ status: 'failed', error_msg: 'Handshake timeout' }).eq('id', cmdData[0].id);
+                
+                alert('Makine yanıt vermedi. İşlem iptal edildi ve paranız cüzdanınıza iade edildi.');
+                fetchProfile(); // Bakiyeyi yenile
+            } else {
+                // BAŞARILI
+                await supabase.from('notifications').insert({ user_id: userId, type: 'success', title: 'İşlem Başladı', message: device.name + ' cihazında yıkama başladı.' });
+                alert('İşlem başladı! Makine çalışıyor.');
+            }
+
+            setShowQrModal(false); setQrDeviceId(''); setQrDynamicAmount(null); setQrWantsPerfume(false); setPaymentConfirmDevice(null);
+            fetchProfile(); // Bakiyeyi yenile
         } catch (e: any) {
             alert('Hata: ' + e.message)
+            fetchProfile();
         } finally {
             setPaymentProcessing(false)
         }
@@ -340,7 +399,7 @@ export default function UserDashboard() {
             {/* Odeme Onay Modali */}
             {paymentConfirmDevice && (
                 <div className="fixed inset-0 z-[10001] flex items-end sm:items-center justify-center sm:p-4">
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPaymentConfirmDevice(null)}></div>
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !paymentProcessing && setPaymentConfirmDevice(null)}></div>
                     <div className="bg-white w-full sm:max-w-sm sm:rounded-[2rem] rounded-t-[2rem] p-6 relative z-10">
                         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5 sm:hidden"></div>
                         <div className="flex flex-col items-center text-center gap-4">
@@ -370,14 +429,17 @@ export default function UserDashboard() {
                                 <p className="text-red-500 text-sm font-bold">Bakiyeniz yetersiz. Lutfen bakiye yukleyin.</p>
                             )}
                             <div className="w-full flex gap-3">
-                                <button onClick={() => setPaymentConfirmDevice(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl">Iptal</button>
+                                <button onClick={() => !paymentProcessing && setPaymentConfirmDevice(null)} disabled={!!paymentProcessing} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl disabled:opacity-50">Iptal</button>
                                 <button
                                     onClick={handleQrPayment}
-                                    disabled={paymentProcessing || balance < (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50)}
-                                    className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
-                                    {paymentProcessing ? 'Isleniyor...' : 'Onayla ve Basla'}
+                                    disabled={!!paymentProcessing || balance < (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50)}
+                                    className="flex-[2] py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
+                                    {paymentProcessing === 'processing' ? 'İşleniyor...' : paymentProcessing === 'connecting' ? 'Makine Bekleniyor...' : paymentProcessing === 'refunding' ? 'İade Ediliyor...' : 'Onayla ve Başla'}
                                 </button>
                             </div>
+                            {paymentProcessing === 'connecting' && (
+                                <p className="text-xs text-indigo-600 font-bold animate-pulse mt-2">Lütfen makine onaylayana kadar (max 30sn) uygulamadan çıkmayın...</p>
+                            )}
                         </div>
                     </div>
                 </div>
