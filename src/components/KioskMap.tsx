@@ -53,22 +53,25 @@ function getStatusText(status: string) {
     return { text:'Acik', color:'text-green-600' }
 }
 
-// FitOnce: runs fitBounds exactly once when kiosks first load
+// FitOnce: fits bounds exactly once, never re-fits on re-render
 function FitOnce({ kiosks, userLocation }: { kiosks: any[], userLocation: [number,number] }) {
     const map = useMap()
     const fitted = useRef(false)
     useEffect(() => {
         if (fitted.current || kiosks.length === 0) return
         fitted.current = true
-        const bounds = L.latLngBounds([userLocation])
+        const points: [number,number][] = [userLocation]
         kiosks.forEach((k: any) => {
             const lat = k.lat || k.latitude
             const lng = k.lng || k.longitude
-            if (lat && lng) bounds.extend([lat, lng])
+            if (lat && lng) points.push([lat, lng])
         })
-        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [kiosks.length])
+        if (points.length > 1) {
+            map.fitBounds(L.latLngBounds(points), { padding: [60, 60], maxZoom: 13 })
+        } else {
+            map.setView(userLocation, 13)
+        }
+    }, []) // empty deps - NEVER re-run after first fit
     return null
 }
 
@@ -81,7 +84,7 @@ export default function KioskMap({ userLocation, kiosks }: { userLocation: [numb
     return (
         <div className="relative w-full h-full">
             <style>{pulseStyles}</style>
-            <MapContainer center={userLocation} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
+            <MapContainer center={[41.0082, 28.9784]} zoom={10} scrollWheelZoom={true} zoomControl={true} attributionControl={false} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
                 <FitOnce kiosks={kiosks} userLocation={userLocation} />
                 <TileLayer attribution='&copy; <a href="https://carto.com/">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
                 <Marker position={userLocation} icon={userIcon}><Popup autoPan={false}>Bu Senin Konumun</Popup></Marker>
