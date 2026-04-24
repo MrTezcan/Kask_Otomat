@@ -1,4 +1,4 @@
-ï»¿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -104,7 +104,7 @@ export default function WalletPage() {
         e.preventDefault()
 
         if (cardNumber.replace(/\s/g, '').length !== 16 || !isValidLuhn(cardNumber.replace(/\s/g, ''))) {
-            alert("LÃ¼tfen geÃ§erli bir kredi kartÄ± numarasÄ± giriniz.");
+            alert("Lütfen geçerli bir kredi kartý numarasý giriniz.");
             return;
         }
 
@@ -154,7 +154,7 @@ export default function WalletPage() {
 
                 {/* Balance Card */}
                 <div className="relative mb-10 group">
-                    <div className="absolute inset-0 bg-brand-primary/20 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="absolute inset-0 pointer-events-none bg-brand-primary/20 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="glass-card rounded-[2.5rem] p-8 relative overflow-hidden text-center border border-slate-200 shadow-2xl">
                         <div className="absolute top-0 right-0 p-8 opacity-10">
                             <Wallet className="w-32 h-32 text-slate-800 rotate-12" />
@@ -168,7 +168,7 @@ export default function WalletPage() {
 
                         <button
                             onClick={() => setShowPaymentModal(true)}
-                            className="w-full py-4 bg-gradient-to-r from-brand-primary to-brand-accent text-slate-800 font-black rounded-2xl shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest flex items-center justify-center gap-2 group"
+                            className="w-full py-4 bg-gradient-to-r from-brand-primary to-brand-accent text-slate-800 font-black rounded-2xl shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all active:scale-[0.98] uppercase tracking-widest flex items-center justify-center gap-2 group"
                         >
                             <CreditCard className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                             {t('loadBalance')}
@@ -248,7 +248,7 @@ export default function WalletPage() {
                     <div className="glass-card w-full max-w-sm rounded-3xl p-6 relative z-10 animate-fade-in shadow-2xl border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">{t('securePayment')}</h3>
-                            <button onClick={() => setShowPaymentModal(false)} className="text-slate-500 hover:text-slate-800 p-2 text-2xl">âœ•</button>
+                            <button onClick={() => setShowPaymentModal(false)} className="text-slate-500 hover:text-slate-800 p-2 text-2xl">?</button>
                         </div>
 
                         {/* Credit Card Visual */}
@@ -286,12 +286,12 @@ export default function WalletPage() {
                                     </div>
                                 </div>
                                 <div className="text-xl font-mono text-slate-800 tracking-widest mb-6 drop-shadow-md">
-                                    {cardNumber || 'â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢'}
+                                    {cardNumber || '•••• •••• •••• ••••'}
                                 </div>
                                 <div className="flex justify-between items-end">
                                     <div>
                                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">{t('cardHolder')}</p>
-                                        <p className="text-sm font-medium text-slate-800 tracking-wider uppercase truncate max-w-[150px]">{cardHolderName || (language === 'tr' ? 'Ä°SÄ°M SOYAD' : 'NAME SURNAME')}</p>
+                                        <p className="text-sm font-medium text-slate-800 tracking-wider uppercase truncate max-w-[150px]">{cardHolderName || (language === 'tr' ? 'ÝSÝM SOYAD' : 'NAME SURNAME')}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">{t('expiry')}</p>
@@ -315,7 +315,7 @@ export default function WalletPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs text-slate-500 font-bold ml-1 mb-1 block">{t('expiry')}</label>
-                                    <input required maxLength={5} className="glass-input w-full p-4 rounded-xl text-center" placeholder={language === 'tr' ? 'Ay/YÄ±l' : 'MM/YY'} value={expiry} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2, 4); setExpiry(v); }} />
+                                    <input required maxLength={5} className="glass-input w-full p-4 rounded-xl text-center" placeholder={language === 'tr' ? 'Ay/Yýl' : 'MM/YY'} value={expiry} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2, 4); setExpiry(v); }} />
                                 </div>
                                 <div>
                                     <label className="text-xs text-slate-500 font-bold ml-1 mb-1 block">{t('cvv')}</label>
@@ -338,7 +338,7 @@ export default function WalletPage() {
                     <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 relative z-10 animate-scale-in border border-slate-200 shadow-2xl">
                         <div className="flex justify-between items-center mb-8">
                             <h3 className="text-2xl font-black tracking-tight text-slate-800 uppercase italic">{t('settings')}</h3>
-                            <button onClick={() => setShowSettings(false)} className="w-10 h-10 glass rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">âœ•</button>
+                            <button onClick={() => setShowSettings(false)} className="w-10 h-10 glass rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">?</button>
                         </div>
 
                         <div className="space-y-6">
@@ -350,7 +350,7 @@ export default function WalletPage() {
                                         onClick={() => setLanguage('tr')}
                                         className={`flex items-center justify-between px-4 py-4 rounded-2xl border transition-all ${language === 'tr' ? 'bg-brand-primary/20 border-brand-primary text-slate-800' : 'bg-white border border-slate-100 shadow-sm border-slate-100 text-slate-500 hover:bg-slate-50'}`}
                                     >
-                                        <span className="font-bold text-sm">TÃ¼rkÃ§e</span>
+                                        <span className="font-bold text-sm">Türkçe</span>
                                         {language === 'tr' && <Check className="w-4 h-4 text-brand-primary" />}
                                     </button>
                                     <button
@@ -382,4 +382,5 @@ export default function WalletPage() {
         </div>
     )
 }
+
 
