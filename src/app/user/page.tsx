@@ -26,7 +26,18 @@ export default function UserDashboard() {
     const router = useRouter()
     const { language, setLanguage } = useLanguage()
 
-    const [activeTab, setActiveTab] = useState<'home' | 'map'>('home')
+    const getInitialTab = (): 'home' | 'map' => {
+        if (typeof window !== 'undefined') {
+            const hash = window.location.hash.replace('#', '')
+            if (hash === 'map') return 'map'
+        }
+        return 'home'
+    }
+    const [activeTab, setActiveTabState] = useState<'home' | 'map'>(getInitialTab)
+    const setActiveTab = (tab: 'home' | 'map') => {
+        setActiveTabState(tab)
+        window.location.hash = tab
+    }
     const [showQrModal, setShowQrModal] = useState(false)
     const [showCameraScanner, setShowCameraScanner] = useState(false)
     const [paymentConfirmDevice, setPaymentConfirmDevice] = useState<Device | null>(null)

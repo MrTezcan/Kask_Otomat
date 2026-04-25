@@ -57,7 +57,20 @@ export default function AdminDashboard() {
     const [otaTargetMode, setOtaTargetMode] = useState<'all' | 'select'>('all')
     const [otaSelectedDevices, setOtaSelectedDevices] = useState<string[]>([])
 
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'devices' | 'customers' | 'finance' | 'support' | 'notifications' | 'ota'>('dashboard')
+    type AdminTab = 'dashboard' | 'devices' | 'customers' | 'finance' | 'support' | 'notifications' | 'ota'
+    const validAdminTabs: AdminTab[] = ['dashboard', 'devices', 'customers', 'finance', 'support', 'notifications', 'ota']
+    const getInitialAdminTab = (): AdminTab => {
+        if (typeof window !== 'undefined') {
+            const hash = window.location.hash.replace('#', '') as AdminTab
+            if (validAdminTabs.includes(hash)) return hash
+        }
+        return 'dashboard'
+    }
+    const [activeTab, setActiveTabState] = useState<AdminTab>(getInitialAdminTab)
+    const setActiveTab = (tab: AdminTab) => {
+        setActiveTabState(tab)
+        window.location.hash = tab
+    }
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null)
     const [ticketReplies, setTicketReplies] = useState<any[]>([])
     const [replyText, setReplyText] = useState('')
