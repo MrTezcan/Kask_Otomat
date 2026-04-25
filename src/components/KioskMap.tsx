@@ -63,10 +63,23 @@ function InvalidateSize() {
     return null
 }
 
-// FitOnce: fits bounds exactly once, never re-fits on re-render
+// FitOnce: centers on user location first, then fits bounds with kiosks
 function FitOnce({ kiosks, userLocation }: { kiosks: any[], userLocation: [number,number] }) {
     const map = useMap()
     const fitted = useRef(false)
+    const centeredOnUser = useRef(false)
+    
+    // Center on real user location as soon as it's available (not default Istanbul)
+    useEffect(() => {
+        if (centeredOnUser.current) return
+        const isDefault = userLocation[0] === 41.0082 && userLocation[1] === 28.9784
+        if (!isDefault) {
+            centeredOnUser.current = true
+            map.setView(userLocation, 13, { animate: true })
+        }
+    }, [userLocation])
+    
+    // Fit bounds once when kiosks are loaded
     useEffect(() => {
         if (fitted.current || kiosks.length === 0) return
         fitted.current = true
@@ -81,7 +94,7 @@ function FitOnce({ kiosks, userLocation }: { kiosks: any[], userLocation: [numbe
         } else {
             map.setView(userLocation, 13)
         }
-    }, []) // empty deps - NEVER re-run after first fit
+    }, [kiosks])
     return null
 }
 
@@ -94,7 +107,7 @@ export default function KioskMap({ userLocation, kiosks }: { userLocation: [numb
     return (
         <div className="relative w-full h-full">
             <style>{pulseStyles}</style>
-            <MapContainer center={[41.0082, 28.9784]} zoom={10} scrollWheelZoom={true} zoomControl={true} attributionControl={false} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
+            <MapContainer center={userLocation} zoom={13} scrollWheelZoom={true} zoomControl={true} attributionControl={false} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
                 <InvalidateSize />
                 <FitOnce kiosks={kiosks} userLocation={userLocation} />
                 <TileLayer attribution='&copy; <a href="https://carto.com/">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
