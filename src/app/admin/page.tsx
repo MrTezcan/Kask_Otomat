@@ -12,7 +12,7 @@ const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
 type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number
-    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; kiosk_video_url?: string; work_status?: string; sivi_seviye?: number; alarm?: string; }
+    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; sivi_seviye?: number; alarm?: string; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
 
     const handleSaveKiosk = async () => {
         if (!newKioskLocation || !newKioskName) return alert('Lutfen tum alanlari doldurun')
-        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), last_seen: new Date().toISOString(), kiosk_video_url: newKioskVideoUrl }
+        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), last_seen: new Date().toISOString(), video_url: newKioskVideoUrl }
         let error;
         if (editingDevice) {
              const res = await supabase.from('devices').update(data).eq('id', editingDevice.id)
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
         if (!confirm('Tum cihazlarin video URLsi guncellenecek. Emin misiniz?')) return
         setLoading(true)
         try {
-            await supabase.from('devices').update({ kiosk_video_url: bulkVideoUrl })
+            await supabase.from('devices').update({ video_url: bulkVideoUrl })
             alert('Tum cihazlarin videosu guncellendi')
             setShowBulkVideoModal(false)
             setBulkVideoUrl('')
@@ -787,8 +787,8 @@ const findCoordinates = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${device.work_status === 'idle' || !device.work_status ? 'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-700'}`}>
-                                                Makine: {device.work_status || 'bosta'}
+                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${!device.work_status || device.work_status === 'idle' ? 'bg-slate-100 text-slate-500' : device.work_status === 'finished' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-700'}`}>
+                                                Makine: {!device.work_status || device.work_status === 'idle' ? 'Bosta' : device.work_status === 'disinfecting' ? 'Dezenfekte' : device.work_status === 'drying' ? 'Kurutuyor' : device.work_status === 'perfume' ? 'Parfum' : device.work_status === 'finished' ? 'Tamamlandi' : device.work_status}
                                             </span>
                                         </div>
                                     </div>
@@ -811,7 +811,7 @@ const findCoordinates = () => {
                                             <button onClick={async()=>{
                                                 const {data:fresh} = await supabase.from('devices').select('*').eq('id',device.id).single();
                                                 const d = fresh || device;
-                                                setEditingDevice(d);setNewKioskName(d.name);setNewKioskPrice(d.hizmet_fiyati?.toString()||'50');setNewKioskPerfumePrice(d.parfum_fiyati?.toString()||'5');setNewKioskLocation([d.latitude!,d.longitude!]);setNewKioskAddress(d.location);setNewKioskVideoUrl(d.kiosk_video_url||'');setShowAddKioskModal(true);
+                                                setEditingDevice(d);setNewKioskName(d.name);setNewKioskPrice(d.hizmet_fiyati?.toString()||'50');setNewKioskPerfumePrice(d.parfum_fiyati?.toString()||'5');setNewKioskLocation([d.latitude!,d.longitude!]);setNewKioskAddress(d.location);setNewKioskVideoUrl(d.video_url||'');setShowAddKioskModal(true);
                                             }} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Pen className="w-3 h-3" /></button>
                                             <button onClick={() => handleDeleteKiosk(device.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"><Trash2 className="w-3 h-3" /></button>
                                         </div>
