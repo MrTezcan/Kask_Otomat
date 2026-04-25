@@ -53,6 +53,16 @@ function getStatusText(status: string) {
     return { text:'Acik', color:'text-green-600' }
 }
 
+// InvalidateSize: fixes gray tiles when map container was hidden (display:none)
+function InvalidateSize() {
+    const map = useMap()
+    useEffect(() => {
+        const timer = setTimeout(() => map.invalidateSize(), 200)
+        return () => clearTimeout(timer)
+    })
+    return null
+}
+
 // FitOnce: fits bounds exactly once, never re-fits on re-render
 function FitOnce({ kiosks, userLocation }: { kiosks: any[], userLocation: [number,number] }) {
     const map = useMap()
@@ -85,6 +95,7 @@ export default function KioskMap({ userLocation, kiosks }: { userLocation: [numb
         <div className="relative w-full h-full">
             <style>{pulseStyles}</style>
             <MapContainer center={[41.0082, 28.9784]} zoom={10} scrollWheelZoom={true} zoomControl={true} attributionControl={false} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
+                <InvalidateSize />
                 <FitOnce kiosks={kiosks} userLocation={userLocation} />
                 <TileLayer attribution='&copy; <a href="https://carto.com/">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
                 <Marker position={userLocation} icon={userIcon}><Popup autoPan={false}>Bu Senin Konumun</Popup></Marker>
