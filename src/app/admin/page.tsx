@@ -792,8 +792,6 @@ const findCoordinates = () => {
                                             </span>
                                         </div>
                                     </div>
-
-                                    </div>
                                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
                                         <div className="flex flex-col gap-1">
                                             <div className="text-sm font-black text-brand-primary">{device.hizmet_fiyati} TL</div>
