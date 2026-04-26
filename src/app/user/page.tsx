@@ -171,7 +171,7 @@ export default function UserDashboard() {
             if (balError) throw balError
             
             // 2. İşlemi kaydet
-            await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme' + (qrWantsPerfume ? ' + Parfüm' : ''), status: 'completed' })
+            await supabase.from('transactions').insert({ user_id: userId, amount: -finalPrice, type: 'payment', description: device.name + ' Kask Temizleme' + (qrWantsPerfume ? ' + Parfüm' : ''), status: 'completed', payment_method: 'wallet', device_id: device.id })
             
             // 3. Komutu gönder
             const { data: cmdData, error: cmdError } = await supabase.from('device_commands').insert({
@@ -211,7 +211,7 @@ export default function UserDashboard() {
                 // İADE İŞLEMİ (REFUND)
                 setPaymentProcessing('refunding');
                 await supabase.rpc('increment_balance', { amount: finalPrice, user_id: userId });
-                await supabase.from('transactions').insert({ user_id: userId, amount: finalPrice, type: 'deposit', description: 'İade: Makine Yanıt Vermedi', status: 'completed' });
+                await supabase.from('transactions').insert({ user_id: userId, amount: finalPrice, type: 'deposit', description: 'İade: Makine Yanıt Vermedi', status: 'completed', payment_method: 'wallet', device_id: device.id });
                 await supabase.from('device_commands').update({ status: 'failed', error_msg: 'Handshake timeout' }).eq('id', cmdData[0].id);
                 
                 alert('Makine yanıt vermedi. İşlem iptal edildi ve paranız cüzdanınıza iade edildi.');

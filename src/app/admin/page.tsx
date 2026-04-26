@@ -12,7 +12,7 @@ const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
 type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number
-    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; sivi_seviye?: number; alarm?: string; }
+    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; sivi_seviye?: number; alarm?: string; nayax_terminal_id?: string; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     // Edit/Add Kiosk
     const [showAddKioskModal, setShowAddKioskModal] = useState(false)
     const [editingDevice, setEditingDevice] = useState<Device | null>(null)
-    const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskPerfumePrice, setNewKioskPerfumePrice] = useState('5'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState('');
+    const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskPerfumePrice, setNewKioskPerfumePrice] = useState('5'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState(''); const [newKioskNayaxId, setNewKioskNayaxId] = useState('');
     const [addrProvince, setAddrProvince] = useState(''); const [addrDistrict, setAddrDistrict] = useState(''); const [addrStreet, setAddrStreet] = useState(''); const [isGeocoding, setIsGeocoding] = useState(false)
 
     // Notification State
@@ -224,7 +224,8 @@ export default function AdminDashboard() {
 
     const handleSaveKiosk = async () => {
         if (!newKioskLocation || !newKioskName) return alert('Lutfen tum alanlari doldurun')
-        const data = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), last_seen: new Date().toISOString(), video_url: newKioskVideoUrl }
+        const data: any = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), last_seen: new Date().toISOString(), video_url: newKioskVideoUrl }
+        if (newKioskNayaxId.trim()) data.nayax_terminal_id = newKioskNayaxId.trim()
         let error;
         if (editingDevice) {
              const res = await supabase.from('devices').update(data).eq('id', editingDevice.id)
@@ -824,7 +825,7 @@ const findCoordinates = () => {
                                             <button onClick={async()=>{
                                                 const {data:fresh} = await supabase.from('devices').select('*').eq('id',device.id).single();
                                                 const d = fresh || device;
-                                                setEditingDevice(d);setNewKioskName(d.name);setNewKioskPrice(d.hizmet_fiyati?.toString()||'50');setNewKioskPerfumePrice(d.parfum_fiyati?.toString()||'5');setNewKioskLocation([d.latitude!,d.longitude!]);setNewKioskAddress(d.location);setNewKioskVideoUrl(d.video_url||'');setShowAddKioskModal(true);
+                                                setEditingDevice(d);setNewKioskName(d.name);setNewKioskPrice(d.hizmet_fiyati?.toString()||'50');setNewKioskPerfumePrice(d.parfum_fiyati?.toString()||'5');setNewKioskLocation([d.latitude!,d.longitude!]);setNewKioskAddress(d.location);setNewKioskVideoUrl(d.video_url||'');setNewKioskNayaxId(d.nayax_terminal_id||'');setShowAddKioskModal(true);
                                             }} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Pen className="w-3 h-3" /></button>
                                             <button onClick={() => handleDeleteKiosk(device.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"><Trash2 className="w-3 h-3" /></button>
                                         </div>
@@ -860,6 +861,11 @@ const findCoordinates = () => {
                                             </a>
                                         )}
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Nayax Terminal ID</label>
+                                    <input type="text" value={newKioskNayaxId} onChange={e => setNewKioskNayaxId(e.target.value)} className="modern-input" placeholder="Ornek: NAYAX-001 (opsiyonel)" />
                                 </div>
 
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3"><p className="text-xs font-bold text-slate-400 uppercase">Adres Bul</p><div className="grid grid-cols-2 gap-2"><input value={addrProvince} onChange={e => setAddrProvince(e.target.value)} placeholder="Il" className="modern-input text-xs" /><input value={addrDistrict} onChange={e => setAddrDistrict(e.target.value)} placeholder="Ilce" className="modern-input text-xs" /></div><input value={addrStreet} onChange={e => setAddrStreet(e.target.value)} placeholder="Cadde/Sokak" className="modern-input text-xs" /><button onClick={findCoordinates} disabled={isGeocoding} className="w-full py-2 bg-brand-primary/10 text-brand-primary font-bold text-xs rounded-lg hover:bg-brand-primary/20">{isGeocoding ? 'Araniyor...' : 'Konumu Bul'}</button></div>
