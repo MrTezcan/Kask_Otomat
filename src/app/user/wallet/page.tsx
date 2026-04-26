@@ -176,7 +176,7 @@ export default function WalletPage() {
                 {/* Balance Card */}
                 <div className="relative mb-10">
                     <div className="glass-card rounded-[2.5rem] p-8 relative overflow-hidden text-center border border-slate-200 shadow-2xl">
-                        <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                             <Wallet className="w-32 h-32 text-slate-800 rotate-12" />
                         </div>
 
@@ -189,7 +189,7 @@ export default function WalletPage() {
                         <button
                             onClick={() => setShowPaymentModal(true)}
                             style={{ touchAction: 'manipulation' }}
-                            className="w-full py-4 bg-gradient-to-r from-brand-primary to-brand-accent text-slate-800 font-black rounded-2xl shadow-lg uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer select-none"
+                            className="w-full py-4 bg-gradient-to-r from-brand-primary to-brand-accent text-slate-800 font-black rounded-2xl shadow-lg uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer select-none relative z-10"
                         >
                             <CreditCard className="w-5 h-5" />
                             {t('loadBalance')}
