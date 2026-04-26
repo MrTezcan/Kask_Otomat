@@ -18,7 +18,7 @@ export default function WalletPage() {
     // Payment State
     const [showPaymentModal, setShowPaymentModal] = useState(false)
     const [processingPayment, setProcessingPayment] = useState(false)
-    const [loadAmount, setLoadAmount] = useState('50')
+    const [loadAmount, setLoadAmount] = useState('100')
     const [cardNumber, setCardNumber] = useState('')
     const [cardHolderName, setCardHolderName] = useState('')
     const [expiry, setExpiry] = useState('')
@@ -330,7 +330,7 @@ export default function WalletPage() {
                             <div>
                                 <label className="text-xs text-slate-500 font-bold ml-1 mb-2 block">{language === 'tr' ? 'Yüklenecek Tutar' : 'Amount to Load'}</label>
                                 <div className="grid grid-cols-4 gap-2 mb-3">
-                                    {[25, 50, 100, 200].map(amt => (
+                                    {[100, 250, 500, 1000].map(amt => (
                                         <button key={amt} type="button" onClick={() => setLoadAmount(String(amt))} className={`py-3 rounded-xl font-bold text-sm transition-all ${loadAmount === String(amt) ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{amt} TL</button>
                                     ))}
                                 </div>
