@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap } from 'lucide-react'
 import Logo from '@/components/Logo'
@@ -74,6 +74,7 @@ export default function AdminDashboard() {
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null)
     const [ticketReplies, setTicketReplies] = useState<any[]>([])
     const [replyText, setReplyText] = useState('')
+    const adminChatScrollRef = useRef<HTMLDivElement>(null)
 
     // Balance Management
     const [showBalanceModal, setShowBalanceModal] = useState(false)
@@ -157,7 +158,7 @@ export default function AdminDashboard() {
     const fetchCustomers = async () => { const { data } = await supabase.from('profiles').select('*').order('full_name'); if (data) setCustomers(data) }
     const fetchTransactions = async () => { const { data } = await supabase.from('transactions').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setTransactions(data) }
     const fetchTickets = async () => { const { data } = await supabase.from('tickets').select(`*, profiles:user_id(full_name, email)`).order('created_at', { ascending: false }); if (data) setTickets(data) }
-    const fetchReplies = async (ticketId: string) => { const { data } = await supabase.from('ticket_replies').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true }); if (data) setTicketReplies(data) }
+    const fetchReplies = async (ticketId: string) => { const { data } = await supabase.from('ticket_replies').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true }); if (data) { setTicketReplies(data); setTimeout(() => { if (adminChatScrollRef.current) adminChatScrollRef.current.scrollTop = adminChatScrollRef.current.scrollHeight }, 100) } }
     const fetchSentNotifications = async () => { const { data } = await supabase.from('notifications').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setSentNotifications(data) }
     const fetchOtaReleases = async () => { const { data } = await supabase.from('ota_releases').select('*').order('created_at', { ascending: false }); if (data) setOtaReleases(data) }
 
@@ -509,7 +510,7 @@ const findCoordinates = () => {
                                             </div>
 
                                             {/* Messages */}
-                                            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+                                            <div ref={adminChatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
                                                 {/* Original message */}
                                                 <div className="flex gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-black text-slate-600">K</div>
