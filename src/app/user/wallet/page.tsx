@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +18,7 @@ export default function WalletPage() {
     // Payment State
     const [showPaymentModal, setShowPaymentModal] = useState(false)
     const [processingPayment, setProcessingPayment] = useState(false)
+    const [loadAmount, setLoadAmount] = useState(50)
     const [cardNumber, setCardNumber] = useState('')
     const [cardHolderName, setCardHolderName] = useState('')
     const [expiry, setExpiry] = useState('')
@@ -111,24 +112,44 @@ export default function WalletPage() {
         setProcessingPayment(true)
         await new Promise(resolve => setTimeout(resolve, 2000))
 
-        const amount = 100
+        const amount = loadAmount
+        if (amount < 10 || amount > 5000) {
+            alert('Lütfen 10 ile 5000 TL arasında bir tutar giriniz.')
+            setProcessingPayment(false)
+            return
+        }
         const { data: { user } } = await supabase.auth.getUser()
 
         if (user) {
+            // 1. Bakiyeyi artır
             const { error } = await supabase.rpc('increment_balance', {
                 user_id: user.id,
-                amount: amount,
-                p_payment_method: 'credit_card'
+                amount: amount
             })
-            if (!error) {
-                await fetchWalletData()
-                setShowPaymentModal(false)
-                setCardNumber('')
-                setCardHolderName('')
-                setExpiry('')
-                setCvv('')
-                alert(t('paymentSuccess'))
+            if (error) {
+                console.error('[Wallet] RPC hatası:', error)
+                alert('Bakiye yüklenirken bir hata oluştu: ' + error.message)
+                setProcessingPayment(false)
+                return
             }
+            
+            // 2. İşlemi kaydet
+            await supabase.from('transactions').insert({
+                user_id: user.id,
+                amount: amount,
+                type: 'deposit',
+                description: 'Kredi Kartı ile Bakiye Yükleme',
+                status: 'completed',
+                payment_method: 'wallet'
+            })
+
+            await fetchWalletData()
+            setShowPaymentModal(false)
+            setCardNumber('')
+            setCardHolderName('')
+            setExpiry('')
+            setCvv('')
+            alert(t('paymentSuccess'))
         }
         setProcessingPayment(false)
     }
@@ -302,6 +323,20 @@ export default function WalletPage() {
                         </div>
 
                         <form onSubmit={processPayment} className="space-y-4">
+                            {/* Amount Selection */}
+                            <div>
+                                <label className="text-xs text-slate-500 font-bold ml-1 mb-2 block">{language === 'tr' ? 'Yüklenecek Tutar' : 'Amount to Load'}</label>
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                    {[25, 50, 100, 200].map(amt => (
+                                        <button key={amt} type="button" onClick={() => setLoadAmount(amt)} className={`py-3 rounded-xl font-bold text-sm transition-all ${loadAmount === amt ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{amt} TL</button>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input type="number" min={10} max={5000} value={loadAmount} onChange={e => setLoadAmount(Number(e.target.value))} className="glass-input w-full p-3 rounded-xl text-center text-lg font-bold" />
+                                    <span className="text-slate-500 font-bold text-sm shrink-0">TL</span>
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="text-xs text-slate-500 font-bold ml-1 mb-1 block">{t('cardNumber')}</label>
                                 <input required maxLength={19} className={`glass-input w-full p-4 rounded-xl text-lg tracking-wide ${cardNumber.length === 19 && !isValidLuhn(cardNumber.replace(/\s/g, '')) ? 'border-red-500 text-red-500' : ''}`} placeholder="0000 0000 0000 0000" value={cardNumber} onChange={(e) => { const v = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim(); setCardNumber(v.substring(0, 19)); }} />
@@ -323,8 +358,8 @@ export default function WalletPage() {
                                 </div>
                             </div>
 
-                            <button type="submit" disabled={processingPayment} className="w-full py-4 mt-4 bg-emerald-600 hover:bg-emerald-500 text-slate-800 font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50">
-                                {processingPayment ? t('loading') : `100 TL ${t('payButton')}`}
+                            <button type="submit" disabled={processingPayment || loadAmount < 10} className="w-full py-4 mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50">
+                                {processingPayment ? t('loading') : `${loadAmount} TL ${t('payButton')}`}
                             </button>
                         </form>
                     </div>
