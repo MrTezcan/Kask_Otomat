@@ -18,7 +18,7 @@ export default function WalletPage() {
     // Payment State
     const [showPaymentModal, setShowPaymentModal] = useState(false)
     const [processingPayment, setProcessingPayment] = useState(false)
-    const [loadAmount, setLoadAmount] = useState(50)
+    const [loadAmount, setLoadAmount] = useState('50')
     const [cardNumber, setCardNumber] = useState('')
     const [cardHolderName, setCardHolderName] = useState('')
     const [expiry, setExpiry] = useState('')
@@ -112,7 +112,7 @@ export default function WalletPage() {
         setProcessingPayment(true)
         await new Promise(resolve => setTimeout(resolve, 2000))
 
-        const amount = loadAmount
+        const amount = parseInt(loadAmount) || 0
         if (amount < 10 || amount > 5000) {
             alert('Lütfen 10 ile 5000 TL arasında bir tutar giriniz.')
             setProcessingPayment(false)
@@ -331,11 +331,11 @@ export default function WalletPage() {
                                 <label className="text-xs text-slate-500 font-bold ml-1 mb-2 block">{language === 'tr' ? 'Yüklenecek Tutar' : 'Amount to Load'}</label>
                                 <div className="grid grid-cols-4 gap-2 mb-3">
                                     {[25, 50, 100, 200].map(amt => (
-                                        <button key={amt} type="button" onClick={() => setLoadAmount(amt)} className={`py-3 rounded-xl font-bold text-sm transition-all ${loadAmount === amt ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{amt} TL</button>
+                                        <button key={amt} type="button" onClick={() => setLoadAmount(String(amt))} className={`py-3 rounded-xl font-bold text-sm transition-all ${loadAmount === String(amt) ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{amt} TL</button>
                                     ))}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <input type="number" min={10} max={5000} value={loadAmount} onChange={e => setLoadAmount(Number(e.target.value))} className="glass-input w-full p-3 rounded-xl text-center text-lg font-bold" />
+                                    <input type="number" min={10} max={5000} value={loadAmount} onChange={e => setLoadAmount(e.target.value)} onFocus={e => { if (e.target.value === '0') setLoadAmount('') }} className="glass-input w-full p-3 rounded-xl text-center text-lg font-bold" placeholder="Tutar" />
                                     <span className="text-slate-500 font-bold text-sm shrink-0">TL</span>
                                 </div>
                             </div>
@@ -361,8 +361,8 @@ export default function WalletPage() {
                                 </div>
                             </div>
 
-                            <button type="submit" disabled={processingPayment || loadAmount < 10} className="w-full py-4 mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50">
-                                {processingPayment ? t('loading') : `${loadAmount} TL ${t('payButton')}`}
+                            <button type="submit" disabled={processingPayment || (parseInt(loadAmount) || 0) < 10} className="w-full py-4 mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50">
+                                {processingPayment ? t('loading') : `${loadAmount || '0'} TL ${t('payButton')}`}
                             </button>
                         </form>
                     </div>
