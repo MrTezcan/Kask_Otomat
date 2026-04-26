@@ -264,12 +264,15 @@ export default function WalletPage() {
 
             {/* Payment Modal */}
             {showPaymentModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={() => setShowPaymentModal(false)}></div>
-                    <div className="glass-card w-full max-w-sm rounded-3xl p-6 relative z-10 animate-fade-in shadow-2xl border border-slate-200">
+                    <div className="bg-white w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl p-6 relative z-10 shadow-2xl border border-slate-200 overflow-y-auto" style={{ maxHeight: '90vh' }}>
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden"></div>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">{t('securePayment')}</h3>
-                            <button onClick={() => setShowPaymentModal(false)} className="text-slate-500 hover:text-slate-800 p-2 text-2xl">?</button>
+                            <button onClick={() => setShowPaymentModal(false)} className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
                         </div>
 
                         {/* Credit Card Visual */}
