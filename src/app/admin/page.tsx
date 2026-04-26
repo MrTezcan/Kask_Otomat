@@ -109,6 +109,7 @@ export default function AdminDashboard() {
     const [bulkPerfumeUpdateValue, setBulkPerfumeUpdateValue] = useState('')
     const [showBulkVideoModal, setShowBulkVideoModal] = useState(false)
     const [bulkVideoUrl, setBulkVideoUrl] = useState('')
+    const [adminLocation, setAdminLocation] = useState<[number, number]>([41.0082, 28.9784])
 
     useEffect(() => {
         const init = async () => {
@@ -127,6 +128,14 @@ export default function AdminDashboard() {
         const chatSub = supabase.channel('admin-chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload: any) => {
             if (selectedTicket && payload.new.ticket_id === selectedTicket.id) fetchReplies(selectedTicket.id)
         }).subscribe()
+
+        // Admin GPS konumu al
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setAdminLocation([pos.coords.latitude, pos.coords.longitude]),
+                () => {}, { enableHighAccuracy: true, timeout: 5000 }
+            )
+        }
 
         return () => { supabase.removeChannel(sub); supabase.removeChannel(chatSub) }
     }, [selectedTicket])
@@ -434,7 +443,7 @@ const findCoordinates = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-slate-800">Canli Harita</h3><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-lg">Online</span></div>
-                                    <div className="h-[300px] rounded-xl overflow-hidden border border-slate-50 relative"><KioskMap userLocation={[41.0082, 28.9784]} kiosks={devices} /></div>
+                                    <div className="h-[300px] rounded-xl overflow-hidden border border-slate-50 relative"><KioskMap userLocation={adminLocation} kiosks={devices} /></div>
                                 </div>
                                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
                                     <h3 className="font-bold text-lg text-slate-800 mb-4">Son Aktiviteler</h3>
@@ -872,7 +881,7 @@ const findCoordinates = () => {
                                 <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tam Adres</label><textarea value={newKioskAddress} onChange={e => setNewKioskAddress(e.target.value)} className="modern-input text-xs" rows={2} /></div>
                                 <button onClick={handleSaveKiosk} className="w-full btn-primary">{editingDevice ? 'Guncelle' : 'Kaydet'}</button>
                             </div>
-                            <div className="rounded-2xl overflow-hidden border border-slate-200 h-[400px]"><AddKioskMap userLocation={[41.0082, 28.9784]} initialLocation={newKioskLocation} onLocationSelect={(lat, lng) => setNewKioskLocation([lat, lng])} otherKiosks={devices} /></div>
+                            <div className="rounded-2xl overflow-hidden border border-slate-200 h-[400px]"><AddKioskMap userLocation={adminLocation} initialLocation={newKioskLocation} onLocationSelect={(lat, lng) => setNewKioskLocation([lat, lng])} otherKiosks={devices} /></div>
                         </div>
                     </div>
                 </div>
