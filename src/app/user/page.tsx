@@ -197,7 +197,9 @@ export default function UserDashboard() {
                         table: 'devices',
                         filter: 'id=eq.' + device.id
                     }, (payload) => {
-                        if (payload.new.status === 'washing') {
+                        // work_status 'idle' değilse ve boş değilse makine başlamıştır
+                        const ws = payload.new.work_status;
+                        if (ws && ws !== 'idle') {
                             clearTimeout(timeoutId);
                             resolve('success');
                         }
