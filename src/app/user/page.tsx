@@ -186,25 +186,35 @@ export default function UserDashboard() {
             setPaymentProcessing('connecting');
             
             const handshakeResult = await new Promise((resolve) => {
-                let timeoutId = setTimeout(() => {
-                    resolve('timeout');
-                }, 30000); // 30 saniye bekle
+                      let timeoutId = setTimeout(() => {
+                                  resolve('timeout');
+                      }, 30000);
 
-                const channel = supabase.channel('wait_device_' + device.id)
-                    .on('postgres_changes', { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'devices',
-                        filter: 'id=eq.' + device.id
-                    }, (payload) => {
-                        // work_status 'idle' değilse ve boş değilse makine başlamıştır
-                        const ws = payload.new.work_status;
-                        if (ws && ws !== 'idle') {
-                            clearTimeout(timeoutId);
-                            resolve('success');
-                        }
-                    })
-                    .subscribe();
+                      const channel = supabase.channel('handshake_' + (cmdData?.[0]?.id || 'unknown'))
+                        .on('postgres_changes', {
+                                      event: 'UPDATE',
+                                      schema: 'public',
+                                      table: 'devices',
+                                      filter: `id=eq.${device.id}`
+                        }, (payload) => {
+                                      const ws = payload.new.work_status;
+                                      if (ws && ws !== 'idle') {
+                                                      clearTimeout(timeoutId);
+                                                      resolve('success');
+                                      }
+                        })
+                        .on('postgres_changes', {
+                                      event: 'UPDATE',
+                                      schema: 'public',
+                                      table: 'device_commands',
+                                      filter: `id=eq.${cmdData?.[0]?.id}`
+                        }, (payload) => {
+                                      if (payload.new.executed_at) {
+                                                      clearTimeout(timeoutId);
+                                                      resolve('success');
+                                      }
+                        })
+                        .subscribe();
             });
 
             supabase.removeAllChannels(); // Dinlemeyi kapat
