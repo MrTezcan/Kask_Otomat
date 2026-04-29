@@ -98,6 +98,7 @@ export default function AdminDashboard() {
     const [notifMessage, setNotifMessage] = useState('')
     const [notifType, setNotifType] = useState('info')
     const [showStatusMenu, setShowStatusMenu] = useState<string | null>(null)
+    const [showMobileMenu, setShowMobileMenu] = useState(false)
     const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false)
     const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
     const [bulkUpdateValue, setBulkUpdateValue] = useState('')
@@ -389,36 +390,48 @@ export default function AdminDashboard() {
             </aside>
 
             <main className="flex-1 overflow-y-auto relative scroll-smooth bg-slate-50/50">
-                <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
-                    <Logo size="small" />
+                <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-50">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setShowMobileMenu(true)} className="p-2 -ml-2 text-slate-600">
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <Logo size="small" />
+                    </div>
                     <div className="flex gap-1 items-center">
-                        <button onClick={() => setActiveTab('notifications')} className={"relative p-2 rounded-xl hover:bg-slate-100 active:scale-95 transition-colors " + (activeTab === 'notifications' ? 'text-brand-primary' : 'text-slate-500')}><Bell className="w-6 h-6" /></button>
-                        <button onClick={() => setShowAdminSettings(true)} className="p-2 rounded-xl hover:bg-slate-100 active:scale-95 transition-colors text-slate-500"><Settings className="w-6 h-6" /></button>
+                        <button onClick={() => setShowAdminSettings(true)} className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500"><Settings className="w-6 h-6" /></button>
                         <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="p-2 text-slate-400 hover:text-red-500"><LogOut className="w-6 h-6" /></button>
                     </div>
                 </header>
 
-                {/* Mobil Bottom Nav */}
-                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                    <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'dashboard' ? 'text-brand-primary' : 'text-slate-400'}`}>
-                        <LayoutDashboard className="w-6 h-6" />
-                        <span className="text-[10px] font-bold uppercase">Panel</span>
-                    </button>
-                    <button onClick={() => setActiveTab('devices')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'devices' ? 'text-brand-primary' : 'text-slate-400'}`}>
-                        <Cpu className="w-6 h-6" />
-                        <span className="text-[10px] font-bold uppercase">Cihazlar</span>
-                    </button>
-                    <button onClick={() => setActiveTab('finance')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'finance' ? 'text-brand-primary' : 'text-slate-400'}`}>
-                        <Wallet className="w-6 h-6" />
-                        <span className="text-[10px] font-bold uppercase">Finans</span>
-                    </button>
-                    <button onClick={() => setActiveTab('support')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'support' ? 'text-brand-primary' : 'text-slate-400'}`}>
-                        <MessageSquare className="w-6 h-6" />
-                        <span className="text-[10px] font-bold uppercase">Destek</span>
-                    </button>
-                </nav>
+                {/* Full Mobil Sidebar Overlay */}
+                {showMobileMenu && (
+                    <div className="fixed inset-0 z-[100] md:hidden">
+                        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowMobileMenu(false)}></div>
+                        <div className="absolute inset-y-0 left-0 w-[280px] bg-white shadow-2xl flex flex-col animate-slide-in-left">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <Logo size="small" />
+                                <button onClick={() => setShowMobileMenu(false)} className="p-2 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-400"><X className="w-5 h-5" /></button>
+                            </div>
+                            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                                <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Cpu} label="Cihaz Yönetimi" active={activeTab === 'devices'} onClick={() => { setActiveTab('devices'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Users} label="Müşteriler" active={activeTab === 'customers'} onClick={() => { setActiveTab('customers'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Wallet} label="Finansal İşlemler" active={activeTab === 'finance'} onClick={() => { setActiveTab('finance'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={MessageSquare} label="Destek Merkezi" active={activeTab === 'support'} onClick={() => { setActiveTab('support'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Bell} label="Bildirim Geçmişi" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Zap} label="OTA Güncelleme" active={activeTab === 'ota'} onClick={() => { setActiveTab('ota'); setShowMobileMenu(false) }} />
+                            </nav>
+                            <div className="p-4 border-t border-slate-50 bg-slate-50/50">
+                                <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+                                    <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm">{adminName.charAt(0)}</div>
+                                    <div className="flex-1 overflow-hidden"><p className="text-sm font-bold truncate">{adminName}</p><p className="text-xs text-slate-500">Yönetici</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                <div className="p-4 md:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
+                <div className="p-4 md:p-8 max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{activeTab === 'dashboard' ? 'Genel Bakis' : activeTab === 'support' ? 'Destek Merkezi' : activeTab === 'finance' ? 'Finansal Islemler' : activeTab === 'notifications' ? 'Bildirim Gecmisi' : activeTab === 'devices' ? 'Cihaz Yonetimi' : activeTab === 'ota' ? 'OTA Firmware Guncelleme' : 'Musteriler'}</h1>
