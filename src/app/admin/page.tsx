@@ -614,9 +614,9 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => {
                                 const now = currentTime;
-                                const espConnected = (device.esp32_status === true) || (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
+                                const espConnected = (device.esp32_status === true) && (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
                                 const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 45000);
-                                const megaConnected = (device.mega_status === true);
+                                const megaConnected = (device.mega_status === true) && espConnected;
                                 const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected);
 
                                 return (
