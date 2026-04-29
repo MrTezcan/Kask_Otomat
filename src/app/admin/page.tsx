@@ -55,6 +55,7 @@ export default function AdminDashboard() {
     const [otaDeploying, setOtaDeploying] = useState<string | null>(null)
     const [showOtaDeployModal, setShowOtaDeployModal] = useState<any | null>(null)
     const [otaTargetMode, setOtaTargetMode] = useState<'all' | 'select'>('all')
+    const [lastMegaUpdates, setLastMegaUpdates] = useState<Record<string, number>>({})
     const [otaSelectedDevices, setOtaSelectedDevices] = useState<string[]>([])
 
     type AdminTab = 'dashboard' | 'devices' | 'customers' | 'finance' | 'support' | 'notifications' | 'ota'
@@ -130,6 +131,9 @@ export default function AdminDashboard() {
 
         const deviceSub = supabase.channel('admin-devices')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'devices' }, (payload) => {
+                if (payload.new.liquid_level_pct !== undefined && payload.old && payload.new.liquid_level_pct !== payload.old.liquid_level_pct) {
+                    setLastMegaUpdates(prev => ({ ...prev, [payload.new.id]: Date.now() }));
+                }
                 setDevices(current => current.map(d => d.id === payload.new.id ? { ...d, ...payload.new } : d));
             })
             .subscribe();
@@ -541,7 +545,7 @@ export default function AdminDashboard() {
                                 const now = new Date()
                                 const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000
                                 const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000
-                                 const megaConnected = device.liquid_level_pct !== null && device.liquid_level_pct !== undefined;
+                                 const megaConnected = device.mega_status === true;
                                 const hasHardwareFailure = device.status === 'online' && (!espConnected || !tabletConnected || !megaConnected)
 
                                 return (
