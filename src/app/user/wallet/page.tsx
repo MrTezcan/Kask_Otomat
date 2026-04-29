@@ -213,25 +213,27 @@ export default function WalletPage() {
                             ))
                         ) : transactions.length > 0 ? (
                             transactions.map((tx) => (
-                                <div key={tx.id} className="glass-card p-5 rounded-[2rem] flex items-center justify-between border border-slate-100 hover:border-slate-200 transition-colors group">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${tx.amount > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                                            {tx.amount > 0 ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownLeft className="w-6 h-6" />}
+                                <div key={tx.id} className="glass-card p-4 sm:p-5 rounded-[2rem] flex items-center justify-between border border-slate-100 hover:border-slate-200 transition-colors group gap-3">
+                                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 ${tx.amount > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                            {tx.amount > 0 ? <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6" /> : <ArrowDownLeft className="w-5 h-5 sm:w-6 sm:h-6" />}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-slate-800 leading-tight truncate max-w-[140px] sm:max-w-none">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-slate-800 leading-tight text-sm sm:text-base truncate">
                                                 {tx.description}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <Calendar className="w-3 h-3 text-slate-500" />
-                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                                <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                                                     {new Date(tx.created_at).toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
-                                            {tx.payment_method === 'admin' && (
+                                            {(tx.payment_method === 'admin' || tx.type === 'refund') && (
                                                 <div className="flex items-center gap-1.5 mt-1.5 px-2 py-0.5 bg-brand-primary/10 rounded-lg w-fit border border-brand-primary/20">
                                                     <Settings className="w-2.5 h-2.5 text-brand-primary" />
-                                                    <span className="text-[8px] font-black text-brand-primary uppercase tracking-widest">{t('topupAdmin')}</span>
+                                                    <span className="text-[8px] font-black text-brand-primary uppercase tracking-widest">
+                                                        {tx.type === 'refund' ? (language === 'tr' ? 'İADE' : 'REFUND') : t('topupAdmin')}
+                                                    </span>
                                                 </div>
                                             )}
                                             {tx.payment_method === 'card' && (
@@ -242,12 +244,14 @@ export default function WalletPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className={`text-lg font-black tracking-tight ${tx.amount > 0 ? 'text-emerald-400' : 'text-slate-600'}`}>
+                                    <div className="text-right shrink-0">
+                                        <p className={`text-base sm:text-lg font-black tracking-tight ${tx.amount > 0 ? 'text-emerald-400' : 'text-slate-600'}`}>
                                             {tx.amount > 0 ? '+' : ''}{tx.amount} TL
                                         </p>
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                                            {t('balanceAfter')}: <span className="text-slate-500 font-black">{tx.balance_after || '--'} TL</span>
+                                        <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                                            {tx.balance_after ? (
+                                                <>{t('balanceAfter')}: <span className="text-slate-500 font-black">{tx.balance_after} TL</span></>
+                                            ) : '--'}
                                         </p>
                                     </div>
                                 </div>
