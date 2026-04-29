@@ -541,7 +541,7 @@ export default function AdminDashboard() {
                                 const now = new Date()
                                 const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000
                                 const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000
-                                const megaConnected = device.mega_status === true
+                                 const megaConnected = device.liquid_level_pct !== null && device.liquid_level_pct !== undefined;
                                 const hasHardwareFailure = device.status === 'online' && (!espConnected || !tabletConnected || !megaConnected)
 
                                 return (
