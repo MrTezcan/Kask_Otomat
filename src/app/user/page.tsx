@@ -182,26 +182,60 @@ export default function UserDashboard() {
 
             if (cmdError) throw cmdError;
 
-            // 4. Bağlantı Bekleme (Handshake)
+            // 4. Bağlantı Bekleme (Double Handshake)
             setPaymentProcessing('connecting');
             
             const handshakeResult = await new Promise((resolve) => {
-                let timeoutId = setTimeout(() => {
-                    resolve('timeout');
-                }, 30000); // 30 saniye bekle
+                let isResolved = false;
+                
+                const safeResolve = (val: string) => {
+                    if (isResolved) return;
+                    isResolved = true;
+                    clearTimeout(timeoutId);
+                    clearInterval(pollingInterval);
+                    resolve(val);
+                };
 
-                const channel = supabase.channel('wait_device_' + device.id)
-                    .on('postgres_changes', { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'devices',
-                        filter: 'id=eq.' + device.id
-                    }, (payload) => {
-                        // work_status 'idle' değilse ve boş değilse makine başlamıştır
-                        const ws = payload.new.work_status;
-                        if (ws && ws !== 'idle') {
-                            clearTimeout(timeoutId);
-                            resolve('success');
+                let timeoutId = setTimeout(() => {
+                    safeResolve('timeout');
+                }, 45000); // 45 saniye bekle
+
+                // 1. POLLING (GARANTI YONTEM): Her 2 saniyede bir manuel kontrol et
+                const pollingInterval = setInterval(async () => {
+                    const { data: checkData } = await supabase
+                        .from('device_commands')
+                        .select('status, executed_at')
+                        .eq('id', cmdData?.[0]?.id)
+                        .single();
+                    
+                    if (checkData && (checkData.executed_at || checkData.status === 'processing' || checkData.status === 'completed')) {
+                        console.log('[Handshake] Polling ile basari tespit edildi!');
+                        safeResolve('success');
+                    }
+                    
+                    // Ayrica cihazın work_status durumuna da bak
+                    const { data: devCheck } = await supabase
+                        .from('devices')
+                        .select('work_status')
+                        .eq('id', device.id)
+                        .single();
+                    
+                    if (devCheck && devCheck.work_status && devCheck.work_status !== 'idle') {
+                        console.log('[Handshake] Polling ile cihaz durumu degisimi tespit edildi!');
+                        safeResolve('success');
+                    }
+                }, 2000);
+
+                // 2. REALTIME (HIZLI YONTEM): Degisiklik geldigi an yakala
+                supabase.channel('handshake_' + device.id)
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'devices', filter: `id=eq.${device.id}` }, (payload) => {
+                        if (payload.new.work_status && payload.new.work_status !== 'idle') {
+                            safeResolve('success');
+                        }
+                    })
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'device_commands', filter: `id=eq.${cmdData?.[0]?.id}` }, (payload) => {
+                        if (payload.new.executed_at || payload.new.status === 'processing' || payload.new.status === 'completed') {
+                            safeResolve('success');
                         }
                     })
                     .subscribe();
