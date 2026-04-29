@@ -544,7 +544,7 @@ export default function AdminDashboard() {
                             {devices.map(device => {
                                 const now = new Date()
                                 const espConnected = (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
-                                const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000);
+                                const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 300000);
                                 const megaConnected = (device.mega_status === true);
                                 const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected)
 
@@ -661,8 +661,8 @@ export default function AdminDashboard() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Cihaz ID (Kimlik)</label>
-                                    <input type="text" value={newDeviceId} onChange={e => setNewDeviceId(e.target.value)} disabled={!!editingDevice} className="modern-input bg-slate-50" placeholder="Örn: KASK-DCB4D90C64D4" />
-                                    {editingDevice && <p className="text-[10px] text-slate-400 mt-1">Kayıtlı cihazın ID'si değiştirilemez.</p>}
+                                    <input type="text" value={newDeviceId} onChange={e => setNewDeviceId(e.target.value)} className="modern-input" placeholder="Örn: KASK-DCB4D90C64D4" />
+                                    {editingDevice && <p className="text-[10px] text-brand-primary mt-1 font-bold">DİKKAT: ID değiştirildiğinde donanımla uyuşmazlık olabilir.</p>}
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Cihaz Adı</label>
