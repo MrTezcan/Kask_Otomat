@@ -1,5 +1,5 @@
 'use client'
-
+// Deployment Trigger: Final UI & Handshake Fix
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send } from 'lucide-react'
