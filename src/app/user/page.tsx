@@ -85,15 +85,26 @@ export default function UserDashboard() {
         fetchProfile()
         fetchDevices()
         
+        // Kiosk Identification Logic
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const kioskId = params.get('kiosk');
+            if (kioskId) {
+                localStorage.setItem('freshrider_kiosk_id', kioskId);
+                console.log('[Kiosk] Cihaz ID Hafizaya Kaydedildi:', kioskId);
+            }
+        }
+        
         // Tablet Heartbeat Logic: If this is a kiosk tablet, report status
         const heartbeatInterval = setInterval(async () => {
             const savedKioskId = localStorage.getItem('freshrider_kiosk_id');
             const targetId = savedKioskId || paymentConfirmDevice?.id;
             
             if (targetId) {
-                await supabase.from('devices')
+                const { error } = await supabase.from('devices')
                     .update({ tablet_last_seen: new Date().toISOString() })
                     .eq('id', targetId);
+                if (error) console.error('[Heartbeat] Hata:', error.message);
             }
         }, 30000);
 
