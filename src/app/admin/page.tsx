@@ -2,7 +2,7 @@
 // Final Stability Fix: Comprehensive JSX Re-alignment
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap, Monitor } from 'lucide-react'
+import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap, Monitor, Menu } from 'lucide-react'
 import Logo from '@/components/Logo'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -99,7 +99,23 @@ export default function AdminDashboard() {
     const [notifType, setNotifType] = useState('info')
     const [showStatusMenu, setShowStatusMenu] = useState<string | null>(null)
     const [showMobileMenu, setShowMobileMenu] = useState(false)
+    const [currentTime, setCurrentTime] = useState(new Date())
     const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false)
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+        return () => clearInterval(timer)
+    }, [])
+
+    useEffect(() => {
+        if (!loading) {
+            fetchDevices()
+            fetchCustomers()
+            fetchTransactions()
+            fetchTickets()
+            fetchOtaReleases()
+        }
+    }, [activeTab])
     const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
     const [bulkUpdateValue, setBulkUpdateValue] = useState('')
     const [showBulkVideoModal, setShowBulkVideoModal] = useState(false)
@@ -597,7 +613,7 @@ export default function AdminDashboard() {
                     {activeTab === 'devices' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => {
-                                const now = new Date();
+                                const now = currentTime;
                                 const espConnected = (device.esp32_status === true) || (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
                                 const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 45000);
                                 const megaConnected = (device.mega_status === true);
