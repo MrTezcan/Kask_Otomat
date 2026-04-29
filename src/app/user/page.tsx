@@ -177,7 +177,7 @@ export default function UserDashboard() {
             const { data: cmdData, error: cmdError } = await supabase.from('device_commands').insert({
                 device_id: device.id,
                 command: 'START_WASH',
-                payload: { perfume: qrWantsPerfume, amount: finalPrice, perfume_price: (device.parfum_fiyati || 5) }
+                payload: { perfume: qrWantsPerfume, amount: finalPrice, perfume_price: 0 }
             }).select();
 
             if (cmdError) throw cmdError;
@@ -315,8 +315,23 @@ export default function UserDashboard() {
     }
 
     const markAllAsRead = async () => {
+        if (!userId || notifications.length === 0) return
+        
+        // 1. Local state guncelle
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
-        await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false)
+        
+        // 2. Kisisel bildirimleri guncelle
+        const personalIds = notifications.filter(n => n.user_id && !n.is_read).map(n => n.id)
+        if (personalIds.length > 0) {
+            await supabase.from('notifications').update({ is_read: true }).in('id', personalIds)
+        }
+        
+        // 3. Genel bildirimleri notification_reads'e ekle
+        const globalIds = notifications.filter(n => !n.user_id && !n.is_read).map(n => n.id)
+        if (globalIds.length > 0) {
+            const readInserts = globalIds.map(id => ({ user_id: userId, notification_id: id }))
+            await supabase.from('notification_reads').upsert(readInserts, { onConflict: 'user_id,notification_id' })
+        }
     }
 
     return (
@@ -443,9 +458,14 @@ export default function UserDashboard() {
                             </div>
                             <div className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Hizmet Ucreti {qrWantsPerfume ? '(Parfümlü)' : ''}</span>
+                                    <span className="text-slate-500">Hizmet Ucreti {qrWantsPerfume ? '(Parfüm Dahil)' : ''}</span>
                                     <span className="font-black text-slate-800">{qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50} TL</span>
                                 </div>
+                                {qrWantsPerfume && (
+                                    <p className="text-[10px] text-amber-600 font-bold bg-amber-50 p-1.5 rounded-lg border border-amber-100">
+                                        ⚠️ Alerjiniz veya koku hassasiyetiniz varsa parfümü iptal edebilirsiniz.
+                                    </p>
+                                )}
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-500">Mevcut Bakiye</span>
                                     <span className={"font-bold " + (balance >= (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50) ? 'text-emerald-600' : 'text-red-500')}>{balance} TL</span>
