@@ -112,6 +112,13 @@ export default function AdminDashboard() {
     const [bulkVideoUrl, setBulkVideoUrl] = useState('')
     const [adminLocation, setAdminLocation] = useState<[number, number]>([41.0082, 28.9784])
 
+    const [now, setNow] = useState(new Date())
+
+    useEffect(() => {
+        const interval = setInterval(() => setNow(new Date()), 30000)
+        return () => clearInterval(interval)
+    }, [])
+
     useEffect(() => {
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser()
@@ -812,17 +819,35 @@ const findCoordinates = () => {
                                         <div>
                                             <h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors">{device.name}</h3>
                                             <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {device.location}</p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
+                                                                            <div className="flex flex-col items-end gap-2">
                                             <div className="relative">
-                                                <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase flex items-center gap-1 cursor-pointer hover:opacity-80 transition-all shadow-sm ${device.status === 'online' ? 'bg-emerald-500 text-white' : device.status === 'offline' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>
-                                                    {device.status} <ChevronDown className="w-3 h-3" />
-                                                </button>
+                                                {/* Fiziksel Baglanti Durumu (Heartbeat) */}
+                                                {(() => {
+                                                    const isConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 120000;
+                                                    return (
+                                                        <div className="flex flex-col items-end gap-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse'}`}></span>
+                                                                <span className={`text-[10px] font-bold uppercase ${isConnected ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                                    {isConnected ? 'Bagli' : 'Kopuk'}
+                                                                </span>
+                                                            </div>
+                                                            <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer border shadow-sm ${
+                                                                device.status === 'online' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
+                                                                device.status === 'maintenance' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
+                                                                'bg-slate-50 border-slate-100 text-slate-500'
+                                                            }`}>
+                                                                MOD: {device.status === 'online' ? 'AKTIF' : device.status === 'maintenance' ? 'BAKIM' : 'KAPALI'} <ChevronDown className="w-2.5 h-2.5" />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })()}
+                                                
                                                 {showStatusMenu === device.id && (
-                                                    <div className="absolute right-0 top-8 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[120px] animate-fade-in-up">
-                                                        <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Online</button>
-                                                        <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-amber-50 text-amber-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Bakim</button>
-                                                        <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-red-50 text-red-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Offline</button>
+                                                    <div className="absolute right-0 top-10 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[130px] animate-fade-in-up">
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-2">🟢 AKTIF MOD</button>
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-amber-50 text-amber-600 rounded-lg flex items-center gap-2">🟠 BAKIM MODU</button>
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-slate-50 text-slate-600 rounded-lg flex items-center gap-2">⚪ DEVRE DISI</button>
                                                     </div>
                                                 )}
                                             </div>
