@@ -235,8 +235,15 @@ export default function AdminDashboard() {
              const res = await supabase.from('devices').insert([{ ...data, id: newDeviceId, status: 'online' }])
              error = res.error
         }
-        if (!error) { alert('Kaydedildi'); setShowAddKioskModal(false); setEditingDevice(null); fetchDevices() }
-        else { alert('Hata olustu: ' + error.message) }
+        if (!error) { 
+            alert('Başarıyla Kaydedildi!'); 
+            setShowAddKioskModal(false); 
+            setEditingDevice(null); 
+            fetchDevices(); 
+        } else { 
+            console.error('Kayıt Hatası:', error); 
+            alert('Hata oluştu: ' + error.message); 
+        }
     }
     const handleDeleteKiosk = async (id: string) => { if (confirm('Silinsin mi?')) { await supabase.from('devices').delete().eq('id', id); fetchDevices() } }
     const handleDeleteUser = async (c: Customer) => {
@@ -593,6 +600,16 @@ export default function AdminDashboard() {
                                                         setEditingDevice(device); 
                                                         setNewDeviceId(device.id);
                                                         setNewKioskName(device.name); 
+                                                        setNewKioskPrice(device.hizmet_fiyati?.toString() || '50');
+                                                        setNewKioskPerfumePrice(device.parfum_fiyati?.toString() || '5');
+                                                        setNewKioskNayaxId(device.nayax_terminal_id || '');
+                                                        setNewKioskVideoUrl(device.video_url || '');
+                                                        setNewKioskAddress(device.location || '');
+                                                        if (device.latitude && device.longitude) {
+                                                            setNewKioskLocation([device.latitude, device.longitude]);
+                                                        } else {
+                                                            setNewKioskLocation(null);
+                                                        }
                                                         setShowAddKioskModal(true); 
                                                     }} 
                                                     className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all active:scale-95 cursor-pointer shadow-md"
