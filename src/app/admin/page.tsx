@@ -577,41 +577,38 @@ export default function AdminDashboard() {
                                             <div className="flex justify-between items-center mb-1.5"><span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1.5"><Zap className="w-3 h-3 text-blue-400" />Sıvı Seviyesi</span><span className="text-[10px] font-black text-slate-600">%{device.liquid_level_pct || 0}</span></div>
                                             <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden"><div className={`h-full transition-all duration-1000 ${device.liquid_level_pct && device.liquid_level_pct < 20 ? 'bg-red-500' : 'bg-brand-primary'}`} style={{ width: `${device.liquid_level_pct || 0}%` }} /></div>
                                         </div>
-                                        {/* Aksiyon Butonlari - Kesin Tiklanabilir Mod */}
-                                        <div className="absolute top-4 right-4 flex gap-2 z-[99999] pointer-events-auto">
-                                            <button 
-                                                onClick={(e) => { 
-                                                    e.preventDefault();
-                                                    e.stopPropagation(); 
-                                                    alert('Duzenleme Modu Aciliyor...');
-                                                    setEditingDevice(device); 
-                                                    setNewKioskName(device.name); 
-                                                    setShowAddKioskModal(true); 
-                                                }} 
-                                                className="p-2 bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-700 cursor-pointer active:scale-95 transition-all"
-                                                title="Duzenle"
-                                            >
-                                                <Pen className="w-4 h-4" />
-                                            </button>
-                                            <button 
-                                                onClick={(e) => { 
-                                                    e.preventDefault();
-                                                    e.stopPropagation(); 
-                                                    if(confirm('Cihazi silmek istediginizden emin misiniz?')) {
-                                                        handleDeleteKiosk(device.id); 
-                                                    }
-                                                }} 
-                                                className="p-2 bg-red-600 text-white rounded-xl shadow-lg hover:bg-red-700 cursor-pointer active:scale-95 transition-all"
-                                                title="Sil"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-
-                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50 relative">
-                                            <div className="flex flex-col gap-1">
-                                                <div className="text-sm font-black text-brand-primary">{device.hizmet_fiyati} TL</div>
-                                                <div className="text-[10px] text-slate-500 font-mono">{device.firmware_version || 'v0.0.0'}</div>
+                                        {/* Aksiyon Butonlari - Yeni ve Kesin Mod */}
+                                        <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between relative z-[100]">
+                                            <div className="flex flex-col gap-0.5">
+                                                <div className="text-sm font-black text-brand-primary tracking-tight">{device.hizmet_fiyati} TL</div>
+                                                <div className="text-[9px] text-slate-400 font-mono tracking-tighter uppercase">{device.firmware_version || 'v1.1.2'}</div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.preventDefault();
+                                                        e.stopPropagation(); 
+                                                        setEditingDevice(device); 
+                                                        setNewKioskName(device.name); 
+                                                        setShowAddKioskModal(true); 
+                                                    }} 
+                                                    className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all active:scale-95 cursor-pointer shadow-md"
+                                                >
+                                                    <Pen className="w-3.5 h-3.5" />
+                                                    <span className="text-[11px] font-bold">Duzenle</span>
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.preventDefault();
+                                                        e.stopPropagation(); 
+                                                        if(confirm('Cihazi silmek istediginizden emin misiniz?')) {
+                                                            handleDeleteKiosk(device.id); 
+                                                        }
+                                                    }} 
+                                                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all active:scale-95 cursor-pointer"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
                                         {showStatusMenu === device.id && <div className="fixed inset-0 z-20" onClick={() => setShowStatusMenu(null)}></div>}
