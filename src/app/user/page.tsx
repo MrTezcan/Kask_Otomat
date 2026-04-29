@@ -84,6 +84,19 @@ export default function UserDashboard() {
     useEffect(() => {
         fetchProfile()
         fetchDevices()
+        
+        // Tablet Heartbeat Logic: If this is a kiosk tablet, report status
+        const heartbeatInterval = setInterval(async () => {
+            const savedKioskId = localStorage.getItem('freshrider_kiosk_id');
+            const targetId = savedKioskId || paymentConfirmDevice?.id;
+            
+            if (targetId) {
+                await supabase.from('devices')
+                    .update({ tablet_last_seen: new Date().toISOString() })
+                    .eq('id', targetId);
+            }
+        }, 30000);
+
         const sub = supabase.channel('user-bal').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => setBalance(payload.new.balance)).subscribe()
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -95,8 +108,11 @@ export default function UserDashboard() {
                 () => { }, { enableHighAccuracy: true }
             )
         }
-        return () => { supabase.removeChannel(sub) }
-    }, [])
+        return () => { 
+            supabase.removeChannel(sub);
+            clearInterval(heartbeatInterval);
+        }
+    }, [paymentConfirmDevice?.id])
 
     useEffect(() => { if (showSettings && settingsTab === 'support') fetchTickets() }, [settingsTab, showSettings])
 
