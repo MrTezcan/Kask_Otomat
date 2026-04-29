@@ -232,20 +232,6 @@ export default function AdminDashboard() {
         if (error) alert('Hata: ' + error.message)
         else { alert('Sifreniz guncellendi.'); setAdminOldPw(''); setAdminNewPw(''); setAdminConfirmPw(''); setShowAdminSettings(false) }
     }
-    const handleAdminPasswordChange = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (adminNewPw !== adminConfirmPw) { alert('Yeni şifreler eşleşmiyor'); return }
-        const { error } = await supabase.rpc('change_user_password', {
-            old_password: adminOldPw,
-            new_password: adminNewPw
-        })
-        if (error) { alert('Hata: ' + error.message) }
-        else {
-            alert('Şifre başarıyla güncellendi')
-            setShowAdminSettings(false)
-            setAdminOldPw(''); setAdminNewPw(''); setAdminConfirmPw('')
-        }
-    }
 
     const fetchDevices = async () => { const { data, error } = await supabase.from('devices').select('*, esp32_status, mega_status').order('name'); if (data) setDevices(data) }
     const fetchCustomers = async () => { const { data } = await supabase.from('profiles').select('*').order('full_name'); if (data) setCustomers(data) }
