@@ -543,10 +543,13 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => {
                                 const now = new Date()
-                                const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000
-                                const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000
-                                 const megaConnected = device.mega_status === true;
-                                const hasHardwareFailure = device.status === 'online' && (!espConnected || !tabletConnected || !megaConnected)
+                                // ESP Baglantisi: Ya son gorulme taze olacak ya da cihaz 'online' modda ve islem yapıyor olacak
+                                const espConnected = (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000) || device.status === 'online';
+                                const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000) || (device.status === 'online' && device.tablet_last_seen !== null);
+                                
+                                // Mega Baglantisi: Sivi seviyesi varsa ve cihaz bir islem yapiyorsa (Drying vb.) Mega baglidir
+                                const megaConnected = (device.mega_status === true) || (device.liquid_level_pct !== null && device.work_status !== 'idle' && device.work_status !== undefined);
+                                const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected)
 
                                 return (
                                     <div key={device.id} className={`bg-white p-5 rounded-2xl border transition-all group shadow-sm hover:shadow-md relative ${hasHardwareFailure ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)] ring-1 ring-red-500/50' : 'border-slate-100 hover:border-brand-primary/30'}`}>
