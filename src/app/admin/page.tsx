@@ -624,13 +624,82 @@ export default function AdminDashboard() {
             {/* MODAL: Yeni/Duzenle Cihaz */}
             {showAddKioskModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-[999999] animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="bg-white rounded-[32px] p-8 w-full max-w-2xl shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2 border-b border-slate-50">
                             <h3 className="text-2xl font-black text-slate-900 tracking-tight">
                                 {editingDevice ? 'Cihazı Düzenle' : 'Yeni Cihaz Ekle'}
                             </h3>
                             <button onClick={() => setShowAddKioskModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
                                 <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Cihaz Adı</label>
+                                    <input type="text" value={newKioskName} onChange={e => setNewKioskName(e.target.value)} className="modern-input" placeholder="Örn: Akaretler-1" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Nayax Terminal ID</label>
+                                    <input type="text" value={newKioskNayaxId} onChange={e => setNewKioskNayaxId(e.target.value)} className="modern-input" placeholder="Opsiyonel" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Hizmet Fiyatı (TL)</label>
+                                        <input type="number" value={newKioskPrice} onChange={e => setNewKioskPrice(e.target.value)} className="modern-input" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Parfüm Fiyatı (TL)</label>
+                                        <input type="number" value={newKioskPerfumePrice} onChange={e => setNewKioskPerfumePrice(e.target.value)} className="modern-input" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Video URL</label>
+                                    <div className="flex gap-2">
+                                        <input type="text" value={newKioskVideoUrl} onChange={e => setNewKioskVideoUrl(e.target.value)} className="modern-input flex-1" placeholder="https://..." />
+                                        {newKioskVideoUrl && (
+                                            <a href={newKioskVideoUrl} target="_blank" rel="noreferrer" className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 flex items-center justify-center">
+                                                <Eye className="w-4 h-4 text-slate-400" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase block">Konum Seçimi</label>
+                                        <button onClick={findCoordinates} disabled={isGeocoding} className="text-[10px] font-black text-brand-primary uppercase hover:underline flex items-center gap-1">
+                                            {isGeocoding ? <RefreshCw className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />} Konumumu Bul
+                                        </button>
+                                    </div>
+                                    <div className="h-48 rounded-2xl overflow-hidden border border-slate-100 shadow-inner relative group">
+                                        <AddKioskMap 
+                                            userLocation={adminLocation} 
+                                            onLocationSelect={(lat, lng) => setNewKioskLocation([lat, lng])} 
+                                            initialLocation={newKioskLocation}
+                                            otherKiosks={devices.filter(d => d.id !== editingDevice?.id)}
+                                        />
+                                        {!newKioskLocation && (
+                                            <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
+                                                <div className="bg-white/90 px-3 py-1.5 rounded-full shadow-sm text-[10px] font-bold text-slate-600 border border-slate-200">Haritadan bir nokta seçin</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Adres Detayı</label>
+                                    <textarea value={newKioskAddress} onChange={e => setNewKioskAddress(e.target.value)} className="modern-input h-20 resize-none text-xs" placeholder="Konum seçildiğinde otomatik dolabilir veya manuel giriniz..." />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-8 flex gap-4">
+                            <button onClick={() => setShowAddKioskModal(false)} className="flex-1 py-4 bg-slate-50 text-slate-600 font-bold rounded-2xl hover:bg-slate-100 transition-all">İptal</button>
+                            <button onClick={handleSaveKiosk} className="flex-[2] py-4 bg-brand-primary text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 hover:shadow-brand-primary/40 hover:-translate-y-0.5 transition-all">
+                                {editingDevice ? 'Değişiklikleri Kaydet' : 'Cihazı Oluştur'}
                             </button>
                         </div>
                     </div>
