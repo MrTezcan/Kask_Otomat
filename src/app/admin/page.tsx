@@ -128,10 +128,11 @@ export default function AdminDashboard() {
             const channel = supabase.channel('admin-devices')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'devices' }, (payload) => {
                     setDevices(prev => {
-                        const index = prev.findIndex(d => d.id === payload.new.id)
+                        const newData = payload.new as any
+                        const index = prev.findIndex(d => d.id === newData.id)
                         if (index !== -1) {
                             const newDevices = [...prev]
-                            newDevices[index] = { ...newDevices[index], ...payload.new }
+                            newDevices[index] = { ...newDevices[index], ...newData }
                             return newDevices
                         }
                         return prev
