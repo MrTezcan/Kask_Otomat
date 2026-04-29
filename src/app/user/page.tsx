@@ -186,14 +186,14 @@ export default function UserDashboard() {
             setPaymentProcessing('connecting');
             
             const handshakeResult = await new Promise((resolve) => {
-<<<<<<< HEAD
                 let isResolved = false;
                 
+                let pollingInterval: any;
                 const safeResolve = (val: string) => {
                     if (isResolved) return;
                     isResolved = true;
                     clearTimeout(timeoutId);
-                    clearInterval(pollingInterval);
+                    if (pollingInterval) clearInterval(pollingInterval);
                     resolve(val);
                 };
 
@@ -202,7 +202,7 @@ export default function UserDashboard() {
                 }, 45000); // 45 saniye bekle
 
                 // 1. POLLING (GARANTI YONTEM): Her 2 saniyede bir manuel kontrol et
-                const pollingInterval = setInterval(async () => {
+                pollingInterval = setInterval(async () => {
                     const { data: checkData } = await supabase
                         .from('device_commands')
                         .select('status, executed_at')
@@ -237,41 +237,6 @@ export default function UserDashboard() {
                     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'device_commands', filter: `id=eq.${cmdData?.[0]?.id}` }, (payload) => {
                         if (payload.new.executed_at || payload.new.status === 'processing' || payload.new.status === 'completed') {
                             safeResolve('success');
-=======
-                let timeoutId = setTimeout(() => {
-                    resolve('timeout');
-                }, 45000); // 45 saniye bekle (daha güvenli)
-
-                // 1. Cihaz durumunu dinle
-                supabase.channel('device_status_' + device.id)
-                    .on('postgres_changes', { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'devices' 
-                    }, (payload) => {
-                        if (payload.new.id === device.id) {
-                            const ws = payload.new.work_status;
-                            if (ws && ws !== 'idle') {
-                                clearTimeout(timeoutId);
-                                resolve('success');
-                            }
-                        }
-                    })
-                    .subscribe();
-
-                // 2. Komut durumunu dinle (Makine komutu aldığı an tetiklenir)
-                supabase.channel('cmd_status_' + (cmdData?.[0]?.id || 'unknown'))
-                    .on('postgres_changes', { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'device_commands' 
-                    }, (payload) => {
-                        if (payload.new.id === cmdData?.[0]?.id) {
-                            if (payload.new.executed_at || payload.new.status === 'processing' || payload.new.status === 'completed') {
-                                clearTimeout(timeoutId);
-                                resolve('success');
-                            }
->>>>>>> b1ddafd62b63b9e09071226e25b5b562b8befe8d
                         }
                     })
                     .subscribe();
