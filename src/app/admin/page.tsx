@@ -123,6 +123,25 @@ export default function AdminDashboard() {
             setLoading(false)
         }
         init()
+        
+        fetchDevices();
+        fetchCustomers();
+        fetchTransactions();
+        fetchTickets();
+
+        // Sayfa odaga geldiginde verileri tazele
+        const handleFocus = () => {
+            fetchDevices();
+        };
+        window.addEventListener('focus', handleFocus);
+
+        const channel = supabase
+            .channel('devices_realtime')
+            .on('postgres_changes', { event: '*', table: 'devices', schema: 'public' }, (payload) => {
+                fetchDevices();
+            })
+            .subscribe();
+
         const sub = supabase.channel('admin-db').on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
             if (payload.table !== 'devices') {
                 fetchCustomers(); fetchTransactions(); fetchTickets(); fetchSentNotifications();
@@ -149,7 +168,9 @@ export default function AdminDashboard() {
             )
         }
 
-        return () => { 
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+            supabase.removeChannel(channel);
             supabase.removeChannel(sub); 
             supabase.removeChannel(deviceSub);
             supabase.removeChannel(chatSub); 
@@ -168,7 +189,7 @@ export default function AdminDashboard() {
         if (error) alert('Hata: ' + error.message)
         else { alert('Sifreniz guncellendi.'); setAdminOldPw(''); setAdminNewPw(''); setAdminConfirmPw(''); setShowAdminSettings(false) }
     }
-    const fetchDevices = async () => { const { data } = await supabase.from('devices').select('*').order('name'); if (data) setDevices(data) }
+    const fetchDevices = async () => { const { data, error } = await supabase.from('devices').select('*, esp32_status, mega_status').order('name'); if (data) setDevices(data) }
     const fetchCustomers = async () => { const { data } = await supabase.from('profiles').select('*').order('full_name'); if (data) setCustomers(data) }
     const fetchTransactions = async () => { const { data } = await supabase.from('transactions').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setTransactions(data) }
     const fetchTickets = async () => { const { data } = await supabase.from('tickets').select(`*, profiles:user_id(full_name, email)`).order('created_at', { ascending: false }); if (data) setTickets(data) }
@@ -543,7 +564,7 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => {
                                 const now = new Date()
-                                const espConnected = (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
+                                const espConnected = (device.esp32_status === true) || (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
                                 const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 300000);
                                 const megaConnected = (device.mega_status === true);
                                 const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected)
