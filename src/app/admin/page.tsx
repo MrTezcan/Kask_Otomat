@@ -577,9 +577,19 @@ export default function AdminDashboard() {
                                             <div className="flex justify-between items-center mb-1.5"><span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1.5"><Zap className="w-3 h-3 text-blue-400" />Sıvı Seviyesi</span><span className="text-[10px] font-black text-slate-600">%{device.liquid_level_pct || 0}</span></div>
                                             <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden"><div className={`h-full transition-all duration-1000 ${device.liquid_level_pct && device.liquid_level_pct < 20 ? 'bg-red-500' : 'bg-brand-primary'}`} style={{ width: `${device.liquid_level_pct || 0}%` }} /></div>
                                         </div>
-                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
-                                            <div className="flex flex-col gap-1"><div className="text-sm font-black text-brand-primary">{device.hizmet_fiyati} TL</div><div className="text-[10px] text-slate-500 font-mono">{device.firmware_version || 'v0.0.0'}</div></div>
-                                            <div className="flex gap-2"><button onClick={() => { setEditingDevice(device); setNewKioskName(device.name); setShowAddKioskModal(true) }} className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Pen className="w-3 h-3" /></button><button onClick={() => handleDeleteKiosk(device.id)} className="p-2 bg-red-50 text-red-600 rounded-lg"><Trash2 className="w-3 h-3" /></button></div>
+                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50 relative z-30">
+                                            <div className="flex flex-col gap-1">
+                                                <div className="text-sm font-black text-brand-primary">{device.hizmet_fiyati} TL</div>
+                                                <div className="text-[10px] text-slate-500 font-mono">{device.firmware_version || 'v0.0.0'}</div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={(e) => { e.stopPropagation(); setEditingDevice(device); setNewKioskName(device.name); setShowAddKioskModal(true); }} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                                    <Pen className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteKiosk(device.id); }} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                         {showStatusMenu === device.id && <div className="fixed inset-0 z-20" onClick={() => setShowStatusMenu(null)}></div>}
                                     </div>
