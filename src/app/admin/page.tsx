@@ -1,5 +1,5 @@
 'use client'
-
+// Deployment Trigger: Realtime Heartbeat & Status Separation
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap } from 'lucide-react'
@@ -816,10 +816,11 @@ const findCoordinates = () => {
                                 <div key={device.id} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-brand-primary/30 transition-all group shadow-sm hover:shadow-md relative">
                                     
                                     <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors">{device.name}</h3>
-                                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {device.location}</p>
-                                                                            <div className="flex flex-col items-end gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors truncate">{device.name}</h3>
+                                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-1 truncate"><MapPin className="w-3 h-3" /> {device.location}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2 ml-4">
                                             <div className="relative">
                                                 {/* Fiziksel Baglanti Durumu (Heartbeat) */}
                                                 {(() => {
