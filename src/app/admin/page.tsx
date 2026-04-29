@@ -85,7 +85,7 @@ export default function AdminDashboard() {
 
     const [showAddKioskModal, setShowAddKioskModal] = useState(false)
     const [editingDevice, setEditingDevice] = useState<Device | null>(null)
-    const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskPerfumePrice, setNewKioskPerfumePrice] = useState('5'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState(''); const [newKioskNayaxId, setNewKioskNayaxId] = useState('');
+    const [newDeviceId, setNewDeviceId] = useState(''); const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskPerfumePrice, setNewKioskPerfumePrice] = useState('5'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState(''); const [newKioskNayaxId, setNewKioskNayaxId] = useState('');
     const [addrProvince, setAddrProvince] = useState(''); const [addrDistrict, setAddrDistrict] = useState(''); const [addrStreet, setAddrStreet] = useState(''); const [isGeocoding, setIsGeocoding] = useState(false)
 
     const [showNotifModal, setShowNotifModal] = useState(false)
@@ -231,7 +231,8 @@ export default function AdminDashboard() {
              const res = await supabase.from('devices').update(data).eq('id', editingDevice.id)
              error = res.error
         } else {
-             const res = await supabase.from('devices').insert([{ ...data, status: 'online' }])
+             if (!newDeviceId) return alert('Cihaz ID zorunludur')
+             const res = await supabase.from('devices').insert([{ ...data, id: newDeviceId, status: 'online' }])
              error = res.error
         }
         if (!error) { alert('Kaydedildi'); setShowAddKioskModal(false); setEditingDevice(null); fetchDevices() }
@@ -374,7 +375,7 @@ export default function AdminDashboard() {
                             <div className="flex gap-2">
                                 <button onClick={() => setShowBulkUpdateModal(true)} className="bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"><CreditCard className="w-4 h-4" /> Toplu Fiyat Guncelle</button>
                                 <button onClick={() => { setBulkVideoUrl(''); setShowBulkVideoModal(true) }} className="bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"><Zap className="w-4 h-4" /> Toplu Video Guncelle</button>
-                                <button onClick={() => { setEditingDevice(null); setNewKioskName(''); setNewKioskPrice('50'); setNewKioskPerfumePrice('5'); setNewKioskLocation(null); setNewKioskAddress(''); setNewKioskVideoUrl(''); setShowAddKioskModal(true) }} className="bg-brand-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 transition-all flex items-center gap-2"><Plus className="w-4 h-4" /> Yeni Cihaz Ekle</button>
+                                <button onClick={() => { setEditingDevice(null); setNewDeviceId(''); setNewKioskName(''); setNewKioskPrice('50'); setNewKioskPerfumePrice('5'); setNewKioskLocation(null); setNewKioskAddress(''); setNewKioskVideoUrl(''); setShowAddKioskModal(true) }} className="bg-brand-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 transition-all flex items-center gap-2"><Plus className="w-4 h-4" /> Yeni Cihaz Ekle</button>
                             </div>
                         )}
                     </div>
@@ -590,6 +591,7 @@ export default function AdminDashboard() {
                                                         e.stopPropagation(); 
                                                         console.log("Duzenle butonuna basildi, Modal aciliyor...");
                                                         setEditingDevice(device); 
+                                                        setNewDeviceId(device.id);
                                                         setNewKioskName(device.name); 
                                                         setShowAddKioskModal(true); 
                                                     }} 
@@ -636,6 +638,11 @@ export default function AdminDashboard() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Cihaz ID (Kimlik)</label>
+                                    <input type="text" value={newDeviceId} onChange={e => setNewDeviceId(e.target.value)} disabled={!!editingDevice} className="modern-input bg-slate-50" placeholder="Örn: KASK-DCB4D90C64D4" />
+                                    {editingDevice && <p className="text-[10px] text-slate-400 mt-1">Kayıtlı cihazın ID'si değiştirilemez.</p>}
+                                </div>
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Cihaz Adı</label>
                                     <input type="text" value={newKioskName} onChange={e => setNewKioskName(e.target.value)} className="modern-input" placeholder="Örn: Akaretler-1" />
