@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, TouchableWithoutFeedback, ScrollView, Modal, PanResponder, Platform } from 'react-native';
 import { supabase } from './src/utils/supabase';
-import { Check, ShieldCheck, Zap, ArrowRight, CreditCard, Wallet, Settings } from 'lucide-react-native';
+import { Check, ShieldCheck, Zap, ArrowRight, CreditCard, Wallet, Settings, AlertTriangle } from 'lucide-react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
 import QRCode from 'react-native-qrcode-svg';
@@ -48,13 +48,27 @@ export default function App() {
 
   const styles = getStyles(isNight);
 
-  // Sync resetInactivity into ref so PanResponder can call it
+  useEffect(() => {
+    const loadId = async () => {
+      const savedId = await AsyncStorage.getItem('DEVICE_ID');
+      if (savedId) {
+        setDeviceId(savedId);
+        await fetchDeviceData(savedId);
+      } else {
+        setScreen('SETUP');
+      }
+      setIsReady(true);
+    };
+    loadId();
+  }, []);
+
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
+  const warningTimer = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     resetInactivityRef.current = resetInactivity;
   });
 
-  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
-  const warningTimer = useRef<NodeJS.Timeout | null>(null);
   const [showInactivityWarning, setShowInactivityWarning] = useState(false);
   const [countdown, setCountdown] = useState(20);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,6 +95,12 @@ export default function App() {
   };
 
   const resetInactivity = () => {
+    if (screen === 'MAINTENANCE' || screen === 'SETUP') {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      if (warningTimer.current) clearTimeout(warningTimer.current);
+      return;
+    }
+
     if (!TIMEOUT_SCREENS.includes(screen as ScreenState)) return;
     setShowInactivityWarning(false);
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
@@ -286,20 +306,28 @@ export default function App() {
 
     // --- Tablet Heartbeat ---
     const tabletHeartbeat = async () => {
-      if (!deviceId) return;
+      if (!deviceId) {
+        console.log('[Heartbeat] Cihaz ID bulunamadı, sinyal gönderilmiyor.');
+        return;
+      }
       try {
-        await supabase.from('devices').update({
+        const { error } = await supabase.from('devices').update({
           tablet_last_seen: new Date().toISOString()
         }).eq('id', deviceId);
-        console.log('[Heartbeat] Tablet canlılık sinyali gönderildi');
-      } catch (e) {
-        console.error('[Heartbeat] Hata:', e);
+        
+        if (error) {
+          console.error('[Heartbeat] Veri tabanı hatası:', error.message);
+        } else {
+          console.log('[Heartbeat] Başarılı:', deviceId);
+        }
+      } catch (e: any) {
+        console.error('[Heartbeat] İstisnai hata:', e?.message || e);
       }
     };
     
-    // İlk sinyali hemen gönder
+    // Uygulama her tetiklendiğinde veya ID değiştiğinde hemen bir sinyal gönder
     tabletHeartbeat();
-    const heartbeatInterval = setInterval(tabletHeartbeat, 15000); // 15 saniyede bir ping
+    const heartbeatInterval = setInterval(tabletHeartbeat, 15000); 
 
     return () => { 
       clearInterval(gpsInterval);
@@ -368,6 +396,21 @@ export default function App() {
         </View>
       </View>
     </ScrollView>
+  );
+
+  const renderMaintenance = () => (
+    <View style={[styles.centerSection, { backgroundColor: isNight ? '#0f172a' : '#fff' }]}>
+      <View style={{ padding: 40, alignItems: 'center' }}>
+          <View style={[styles.glowIcon, { backgroundColor: '#fff7ed', borderColor: '#fed7aa' }]}>
+            <AlertTriangle color="#f59e0b" size={80} />
+          </View>
+          <Text style={[styles.title, { color: '#9a3412', marginTop: 20 }]}>BAKIM MODU</Text>
+          <Text style={[styles.subtitle, { color: '#c2410c' }]}>Cihaz şu an teknik bakım nedeniyle hizmet dışıdır.</Text>
+          <View style={{ marginTop: 40, padding: 16, backgroundColor: '#fff7ed', borderRadius: 16, borderColor: '#ffedd5', borderWidth: 1 }}>
+             <Text style={{ color: '#9a3412', fontWeight: 'bold', textAlign: 'center' }}>Lütfen daha sonra tekrar deneyiniz.</Text>
+          </View>
+      </View>
+    </View>
   );
 
   const renderVideoLoop = () => (
@@ -463,20 +506,30 @@ export default function App() {
           style={styles.primaryButton} 
           onPress={async () => { 
             resetInactivity();
-            // Donanim Kontrolu
             try {
-              const { data } = await supabase.from('devices').select('status, last_seen, mega_status').eq('id', deviceId).single();
+              // En Sıkı Kontrol: ESP, MEGA ve Tablet sinyalleri tam mı?
+              const { data } = await supabase.from('devices').select('status, last_seen, mega_status, esp32_status, tablet_last_seen').eq('id', deviceId).single();
               const now = new Date();
-              const espOk = data?.last_seen && (now.getTime() - new Date(data.last_seen).getTime()) < 90000;
-              const megaOk = data?.mega_status === true;
               
-              if (data?.status !== 'online' || !espOk || !megaOk) {
-                alert('Sistem şu an hazır değil. Lütfen biraz bekleyin veya teknik destek isteyin.');
+              // 1. ESP Kontrol (Status true mu veya son 1 dakika içinde sinyal var mı?)
+              const espOk = (data?.esp32_status === true) || (data?.last_seen && (now.getTime() - new Date(data.last_seen).getTime()) < 60000);
+              // 2. MEGA Kontrol
+              const megaOk = data?.mega_status === true;
+              // 3. TABLET Kontrol (Kendi kalp atışımız taze mi?)
+              const tabletOk = data?.tablet_last_seen && (now.getTime() - new Date(data.tablet_last_seen).getTime()) < 60000;
+              
+              if (data?.status !== 'online' || !espOk || !megaOk || !tabletOk) {
+                Alert.alert(
+                  "🛑 Sistem Hazır Değil", 
+                  "Donanım bağlantılarında (ESP, MEGA veya TBL) kopukluk algılandı. Lütfen biraz bekleyin veya teknik destek isteyin.",
+                  [{ text: "Tamam" }]
+                );
                 return;
               }
               setScreen('PAYMENT_METHODS');
             } catch (e) {
-              setScreen('PAYMENT_METHODS'); // Baglanti hatasinda toleransli davranalım
+              console.error('[Security Check] Hata:', e);
+              Alert.alert("Bağlantı Hatası", "Sistem durumu kontrol edilemiyor. Lütfen internet bağlantısını kontrol edin.");
             }
           }} 
           activeOpacity={0.8}
@@ -624,34 +677,6 @@ export default function App() {
         <Text style={[styles.secondaryButtonText, { color: '#ef4444' }]}>⛔ İşlemi İptal Et</Text>
       </TouchableOpacity>
     </ScrollView>
-  );
-
-  const renderFinished = () => (
-    <ScrollView contentContainerStyle={styles.centerSection} style={{ flex: 1, width: '100%' }} bounces={false}>
-      <View style={[styles.glowIcon, { padding: 40, borderRadius: 100, marginBottom: 40, backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-         <Check color="#10b981" size={100} />
-      </View>
-      <Text style={[styles.title, { fontSize: 46, color: '#10b981' }]}>Mükemmel!</Text>
-      <Text style={[styles.subtitle, { color: isNight ? '#f8fafc' : '#0f172a', fontSize: 24, marginTop: 10 }]}>İşlem başarıyla tamamlandı.</Text>
-      <Text style={{ textAlign: 'center', marginTop: 30, color: '#94a3b8', fontSize: 18 }}>
-        Kaskınızı güvenle kullanabilirsiniz. İyi yolculuklar!
-      </Text>
-    </ScrollView>
-  );
-
-  const renderMaintenance = () => (
-    <View style={styles.centerSection}>
-      <View style={[styles.glowIcon, { padding: 40, borderRadius: 100, marginBottom: 40, backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-         <Settings color="#f59e0b" size={100} />
-      </View>
-      <Text style={[styles.title, { color: '#f59e0b' }]}>Bakım Modu</Text>
-      <Text style={[styles.subtitle, { fontSize: 20 }]}>
-        Cihazımız şu an periyodik bakım aşamasındadır. En kısa sürede tekrar hizmetinizde olacağız.
-      </Text>
-      <Text style={{ textAlign: 'center', marginTop: 20, color: '#94a3b8', fontSize: 16 }}>
-        Anlayışınız için teşekkür ederiz.
-      </Text>
-    </View>
   );
 
   return (
