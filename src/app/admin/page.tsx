@@ -11,8 +11,8 @@ import { useLanguage } from '@/context/LanguageContext'
 const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
-type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number
-    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string; }
+type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number;
+    parfum_fiyati?: number; last_seen: string; tablet_last_seen?: string; mega_status?: boolean; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
@@ -822,16 +822,27 @@ const findCoordinates = () => {
                                         </div>
                                         <div className="flex flex-col items-end gap-2 ml-4">
                                             <div className="relative">
-                                                {/* Fiziksel Baglanti Durumu (Heartbeat) */}
+                                                {/* Fiziksel Baglanti Durumu (Heartbeat Diagnostic) */}
                                                 {(() => {
-                                                    const isConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 120000;
+                                                    const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 120000;
+                                                    const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 120000;
+                                                    const megaConnected = device.mega_status === true;
+                                                    
                                                     return (
-                                                        <div className="flex flex-col items-end gap-1.5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse'}`}></span>
-                                                                <span className={`text-[10px] font-bold uppercase ${isConnected ? 'text-emerald-600' : 'text-red-500'}`}>
-                                                                    {isConnected ? 'Bagli' : 'Kopuk'}
-                                                                </span>
+                                                        <div className="flex flex-col items-end gap-2">
+                                                            <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                                                <div className="flex flex-col items-center px-1 border-r border-slate-200">
+                                                                    <Cpu className={`w-3 h-3 ${espConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
+                                                                    <span className="text-[7px] font-black text-slate-400 mt-0.5">ESP</span>
+                                                                </div>
+                                                                <div className="flex flex-col items-center px-1 border-r border-slate-200">
+                                                                    <Zap className={`w-3 h-3 ${megaConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
+                                                                    <span className="text-[7px] font-black text-slate-400 mt-0.5">MEGA</span>
+                                                                </div>
+                                                                <div className="flex flex-col items-center px-1">
+                                                                    <Monitor className={`w-3 h-3 ${tabletConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
+                                                                    <span className="text-[7px] font-black text-slate-400 mt-0.5">TBL</span>
+                                                                </div>
                                                             </div>
                                                             <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer border shadow-sm ${
                                                                 device.status === 'online' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
@@ -845,7 +856,7 @@ const findCoordinates = () => {
                                                 })()}
                                                 
                                                 {showStatusMenu === device.id && (
-                                                    <div className="absolute right-0 top-10 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[130px] animate-fade-in-up">
+                                                    <div className="absolute right-0 top-12 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[130px] animate-fade-in-up">
                                                         <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-2">🟢 AKTIF MOD</button>
                                                         <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-amber-50 text-amber-600 rounded-lg flex items-center gap-2">🟠 BAKIM MODU</button>
                                                         <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-slate-50 text-slate-600 rounded-lg flex items-center gap-2">⚪ DEVRE DISI</button>
