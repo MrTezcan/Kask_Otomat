@@ -563,11 +563,11 @@ export default function AdminDashboard() {
                     {activeTab === 'devices' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => {
-                                const now = new Date()
+                                const now = new Date();
                                 const espConnected = (device.esp32_status === true) || (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
-                                const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 300000);
+                                const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 45000);
                                 const megaConnected = (device.mega_status === true);
-                                const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected)
+                                const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected);
 
                                 return (
                                     <div key={device.id} className={`bg-white p-5 rounded-2xl border transition-all group shadow-sm hover:shadow-md relative ${hasHardwareFailure ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)] ring-1 ring-red-500/50' : 'border-slate-100 hover:border-brand-primary/30'}`}>
@@ -582,15 +582,15 @@ export default function AdminDashboard() {
                                                         <div className={`flex items-center gap-2 p-1.5 rounded-lg border ${hasHardwareFailure ? 'border-red-200 bg-red-50' : 'border-slate-100 bg-slate-50'}`}>
                                                             <div className="flex flex-col items-center px-1 border-r border-slate-200">
                                                                 <Cpu className={`w-3 h-3 ${espConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
-                                                                <span className="text-[6px] font-black text-slate-400 mt-0.5">{device.last_seen ? Math.round((now.getTime() - new Date(device.last_seen).getTime())/1000) : '?'}s</span>
+                                                                <span className="text-[7px] font-black text-slate-400 mt-0.5">ESP</span>
                                                             </div>
                                                             <div className="flex flex-col items-center px-1 border-r border-slate-200">
                                                                 <Zap className={`w-3 h-3 ${megaConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
-                                                                <span className="text-[6px] font-black text-slate-400 mt-0.5">MG</span>
+                                                                <span className="text-[7px] font-black text-slate-400 mt-0.5">MG</span>
                                                             </div>
                                                             <div className="flex flex-col items-center px-1">
                                                                 <Monitor className={`w-3 h-3 ${tabletConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
-                                                                <span className="text-[6px] font-black text-slate-400 mt-0.5">{device.tablet_last_seen ? Math.round((now.getTime() - new Date(device.tablet_last_seen).getTime())/1000) : '?'}s</span>
+                                                                <span className="text-[7px] font-black text-slate-400 mt-0.5">TBL</span>
                                                             </div>
                                                         </div>
                                                         <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 border shadow-sm ${device.status === 'online' ? (hasHardwareFailure ? 'bg-red-600 text-white border-red-700 animate-bounce' : 'bg-emerald-50 text-emerald-600') : 'bg-slate-50 text-slate-500'}`}>
