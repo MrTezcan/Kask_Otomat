@@ -588,6 +588,7 @@ export default function AdminDashboard() {
                                                     onClick={(e) => { 
                                                         e.preventDefault();
                                                         e.stopPropagation(); 
+                                                        console.log("Duzenle butonuna basildi, Modal aciliyor...");
                                                         setEditingDevice(device); 
                                                         setNewKioskName(device.name); 
                                                         setShowAddKioskModal(true); 
@@ -619,6 +620,22 @@ export default function AdminDashboard() {
                     )}
                 </div>
             </main>
+
+            {/* MODAL: Yeni/Duzenle Cihaz */}
+            {showAddKioskModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-[999999] animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                                {editingDevice ? 'Cihazı Düzenle' : 'Yeni Cihaz Ekle'}
+                            </h3>
+                            <button onClick={() => setShowAddKioskModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showAdminSettings && (
                 <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center">
