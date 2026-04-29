@@ -410,21 +410,55 @@ export default function UserDashboard() {
 
                 {/* QR Payment - Home Tab */}
                 {activeTab === 'home' && (
-                    <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center py-10">
-                        <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-5 shadow-inner">
-                            <QrCode className="w-10 h-10" />
+                    <div className="space-y-6">
+                        <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center py-10">
+                            <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                                <QrCode className="w-10 h-10" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR Ödeme</h3>
+                            <p className="text-slate-500 text-center text-sm mb-6 max-w-xs leading-relaxed">
+                                Kask otomatinin üzerindeki QR kodu okutun veya makine kodunu girerek ödemenizi yapın.
+                            </p>
+                            <button
+                                onClick={() => setShowQrModal(true)}
+                                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                            >
+                                <QrCode className="w-5 h-5" />
+                                Kod Girerek Öde
+                            </button>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR Ödeme</h3>
-                        <p className="text-slate-500 text-center text-sm mb-6 max-w-xs leading-relaxed">
-                            Kask otomatinin üzerindeki QR kodu okutun veya makine kodunu girerek ödemenizi yapın.
-                        </p>
-                        <button
-                            onClick={() => setShowQrModal(true)}
-                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
-                        >
-                            <QrCode className="w-5 h-5" />
-                            Kod Girerek Öde
-                        </button>
+
+                        {/* Near Kiosks List */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center px-2">
+                                <h3 className="font-bold text-slate-800 flex items-center gap-2"><MapPin className="w-4 h-4 text-indigo-600" /> Yakınımdaki Cihazlar</h3>
+                                <button onClick={() => setActiveTab('map')} className="text-xs font-bold text-indigo-600">Haritada Gör</button>
+                            </div>
+                            <div className="space-y-3">
+                                {kiosks.sort((a, b) => a.distance - b.distance).slice(0, 3).map(kiosk => (
+                                    <div key={kiosk.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-slate-800 truncate">{kiosk.name}</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{kiosk.distance} KM UZAKLIKTA</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${kiosk.lat},${kiosk.lng}`, '_blank')}
+                                                className="p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                            >
+                                                <MapPin className="w-5 h-5" />
+                                            </button>
+                                            <button 
+                                                onClick={() => { setQrDeviceId(kiosk.id); setShowQrModal(true); setPaymentConfirmDevice(devices.find(d => d.id === kiosk.id) || null) }}
+                                                className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-200"
+                                            >
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </main>
@@ -552,13 +586,27 @@ export default function UserDashboard() {
                                                 <button onClick={async () => { const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId); if (!error) alert('Profil güncellendi') }} className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
                                             </div>
                                         </div>
-                                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                                            <label className="text-xs font-bold text-slate-400 uppercase block">Şifre Değiştir</label>
-                                            <form onSubmit={handlePasswordChange} className="space-y-2">
-                                                <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="Eski şifre" required />
-                                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni şifre (min 6 karakter)" required />
-                                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni şifre tekrar" required />
-                                                <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Şifreyi Güncelle</button>
+                                        <div className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Sliders className="w-4 h-4" /></div>
+                                                <h4 className="font-bold text-slate-800">Şifre Değiştir</h4>
+                                            </div>
+                                            <form onSubmit={handlePasswordChange} className="space-y-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Eski Şifre</label>
+                                                    <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="••••••••" required />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Yeni Şifre</label>
+                                                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="En az 6 karakter" required />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Yeni Şifre Tekrar</label>
+                                                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="••••••••" required />
+                                                </div>
+                                                <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 shadow-lg shadow-slate-200 mt-2 flex items-center justify-center gap-2">
+                                                    <Check className="w-5 h-5" /> Şifreyi Güncelle
+                                                </button>
                                             </form>
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">

@@ -394,10 +394,31 @@ export default function AdminDashboard() {
                     <div className="flex gap-1 items-center">
                         <button onClick={() => setActiveTab('notifications')} className={"relative p-2 rounded-xl hover:bg-slate-100 active:scale-95 transition-colors " + (activeTab === 'notifications' ? 'text-brand-primary' : 'text-slate-500')}><Bell className="w-6 h-6" /></button>
                         <button onClick={() => setShowAdminSettings(true)} className="p-2 rounded-xl hover:bg-slate-100 active:scale-95 transition-colors text-slate-500"><Settings className="w-6 h-6" /></button>
+                        <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="p-2 text-slate-400 hover:text-red-500"><LogOut className="w-6 h-6" /></button>
                     </div>
                 </header>
 
-                <div className="p-4 md:p-8 max-w-7xl mx-auto pb-24">
+                {/* Mobil Bottom Nav */}
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                    <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'dashboard' ? 'text-brand-primary' : 'text-slate-400'}`}>
+                        <LayoutDashboard className="w-6 h-6" />
+                        <span className="text-[10px] font-bold uppercase">Panel</span>
+                    </button>
+                    <button onClick={() => setActiveTab('devices')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'devices' ? 'text-brand-primary' : 'text-slate-400'}`}>
+                        <Cpu className="w-6 h-6" />
+                        <span className="text-[10px] font-bold uppercase">Cihazlar</span>
+                    </button>
+                    <button onClick={() => setActiveTab('finance')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'finance' ? 'text-brand-primary' : 'text-slate-400'}`}>
+                        <Wallet className="w-6 h-6" />
+                        <span className="text-[10px] font-bold uppercase">Finans</span>
+                    </button>
+                    <button onClick={() => setActiveTab('support')} className={`flex flex-col items-center gap-1 p-2 ${activeTab === 'support' ? 'text-brand-primary' : 'text-slate-400'}`}>
+                        <MessageSquare className="w-6 h-6" />
+                        <span className="text-[10px] font-bold uppercase">Destek</span>
+                    </button>
+                </nav>
+
+                <div className="p-4 md:p-8 max-w-7xl mx-auto pb-24 md:pb-8">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{activeTab === 'dashboard' ? 'Genel Bakis' : activeTab === 'support' ? 'Destek Merkezi' : activeTab === 'finance' ? 'Finansal Islemler' : activeTab === 'notifications' ? 'Bildirim Gecmisi' : activeTab === 'devices' ? 'Cihaz Yonetimi' : activeTab === 'ota' ? 'OTA Firmware Guncelleme' : 'Musteriler'}</h1>
