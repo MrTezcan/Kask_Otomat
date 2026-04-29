@@ -422,26 +422,6 @@ export default function UserDashboard() {
                                 }}
                                 onClose={() => { setShowQrModal(false); setShowCameraScanner(false) }}
                             />
-                            <div className="relative flex items-center gap-3">
-                                <div className="flex-1 h-px bg-slate-200" />
-                                <span className="text-xs text-slate-400 font-bold">or</span>
-                                <div className="flex-1 h-px bg-slate-200" />
-                            </div>
-                            {/* Manual fallback */}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manuel Makine Sec</label>
-                                <select className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium text-sm"
-                                    value={qrDeviceId}
-                                    onChange={(e) => {
-                                        const d = devices.find(dev => dev.id === e.target.value)
-                                        if (d) setPaymentConfirmDevice(d)
-                                    }}>
-                                    <option value="">Secim yapın...</option>
-                                    {devices.filter(d => d.status === 'online').map(d => (
-                                        <option key={d.id} value={d.id}>{d.name}</option>
-                                    ))}
-                                </select>
-                            </div>
                         </div>
                     </div>
                 </div>

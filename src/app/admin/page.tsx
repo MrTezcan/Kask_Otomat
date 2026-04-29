@@ -12,7 +12,7 @@ const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
 type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number
-    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; sivi_seviye?: number; alarm?: string; nayax_terminal_id?: string; }
+    parfum_fiyati?: number; last_seen: string; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
@@ -833,21 +833,21 @@ const findCoordinates = () => {
                                     <div className="mt-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
                                         <div className="flex justify-between items-center mb-1.5">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                <Zap className={`w-3 h-3 ${device.sivi_seviye && device.sivi_seviye < 20 ? 'text-red-500 animate-bounce' : 'text-blue-400'}`} />
+                                                <Zap className={`w-3 h-3 ${device.liquid_level_pct && device.liquid_level_pct < 20 ? 'text-red-500 animate-bounce' : 'text-blue-400'}`} />
                                                 Sıvı Seviyesi
                                             </span>
-                                            <span className={`text-[10px] font-black ${device.sivi_seviye && device.sivi_seviye < 20 ? 'text-red-500 animate-pulse' : 'text-slate-600'}`}>
-                                                %{device.sivi_seviye || 0}
+                                            <span className={`text-[10px] font-black ${device.liquid_level_pct && device.liquid_level_pct < 20 ? 'text-red-500 animate-pulse' : 'text-slate-600'}`}>
+                                                %{device.liquid_level_pct || 0}
                                             </span>
                                         </div>
                                         <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                                             <div 
                                                 className={`h-full transition-all duration-1000 ${
-                                                    (device.sivi_seviye || 0) < 20 ? 'bg-red-500' : 
-                                                    (device.sivi_seviye || 0) < 50 ? 'bg-amber-500' :
+                                                    (device.liquid_level_pct || 0) < 20 ? 'bg-red-500' : 
+                                                    (device.liquid_level_pct || 0) < 50 ? 'bg-amber-500' :
                                                     'bg-brand-primary'
                                                 }`} 
-                                                style={{ width: `${device.sivi_seviye || 0}%` }} 
+                                                style={{ width: `${device.liquid_level_pct || 0}%` }} 
                                             />
                                         </div>
                                     </div>
