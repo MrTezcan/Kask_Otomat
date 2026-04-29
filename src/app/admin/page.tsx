@@ -430,14 +430,14 @@ export default function AdminDashboard() {
 
                 {/* Full Mobil Sidebar Overlay */}
                 {showMobileMenu && (
-                    <div className="fixed inset-0 z-[100] md:hidden overflow-hidden">
+                    <div className="fixed inset-0 z-[100] md:hidden h-[100dvh] w-screen overflow-hidden touch-none">
                         <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowMobileMenu(false)}></div>
-                        <div className="absolute inset-y-0 left-0 w-[280px] bg-white shadow-2xl flex flex-col animate-slide-in-left h-full max-h-screen overflow-hidden">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+                        <div className="absolute inset-y-0 left-0 w-[280px] bg-white shadow-2xl flex flex-col animate-slide-in-left h-full overflow-hidden border-r border-slate-100">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
                                 <Logo size="small" />
-                                <button onClick={() => setShowMobileMenu(false)} className="p-2 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-400"><X className="w-5 h-5" /></button>
+                                <button onClick={() => setShowMobileMenu(false)} className="p-2 bg-slate-50 border border-slate-100 rounded-xl shadow-sm text-slate-400"><X className="w-5 h-5" /></button>
                             </div>
-                            <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+                            <nav className="flex-1 overflow-y-auto p-4 space-y-1 bg-white scroll-smooth" style={{ overscrollBehavior: 'contain' }}>
                                 <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Cpu} label="Cihaz Yönetimi" active={activeTab === 'devices'} onClick={() => { setActiveTab('devices'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Users} label="Müşteriler" active={activeTab === 'customers'} onClick={() => { setActiveTab('customers'); setShowMobileMenu(false) }} />
@@ -445,11 +445,12 @@ export default function AdminDashboard() {
                                 <SidebarItem icon={MessageSquare} label="Destek Merkezi" active={activeTab === 'support'} onClick={() => { setActiveTab('support'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Bell} label="Bildirim Geçmişi" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Zap} label="OTA Güncelleme" active={activeTab === 'ota'} onClick={() => { setActiveTab('ota'); setShowMobileMenu(false) }} />
+                                <div className="h-10"></div> {/* Alt tarafın sıkışmaması için boşluk */}
                             </nav>
-                            <div className="p-4 border-t border-slate-50 bg-slate-50/50 shrink-0">
+                            <div className="p-4 border-t border-slate-100 bg-slate-50/80 shrink-0 pb-8">
                                 <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
-                                    <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm">{adminName.charAt(0)}</div>
-                                    <div className="flex-1 overflow-hidden"><p className="text-sm font-bold truncate">{adminName}</p><p className="text-xs text-slate-500">Yönetici</p></div>
+                                    <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shrink-0">{adminName.charAt(0)}</div>
+                                    <div className="flex-1 overflow-hidden"><p className="text-sm font-bold truncate text-slate-800">{adminName}</p><p className="text-[10px] text-slate-500 uppercase font-black">Yönetici</p></div>
                                 </div>
                             </div>
                         </div>
