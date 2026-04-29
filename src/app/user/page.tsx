@@ -726,8 +726,8 @@ export default function UserDashboard() {
                         <span className="text-[10px] font-medium">Cüzdanım</span>
                     </button>
                     <button onClick={() => { setShowSettings(true); setSettingsTab('account') }} className="flex flex-col items-center gap-1 p-2 flex-1 text-slate-400 hover:text-indigo-600 transition-colors">
-                        <User className="w-6 h-6" />
-                        <span className="text-[10px] font-medium">Profil</span>
+                        <Settings className="w-6 h-6" />
+                        <span className="text-[10px] font-medium">Ayarlar</span>
                     </button>
                 </div>
             </div>

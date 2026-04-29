@@ -123,8 +123,25 @@ export default function AdminDashboard() {
             fetchTransactions()
             fetchTickets()
             fetchOtaReleases()
+
+            // Gerçek zamanlı cihaz takibi (Realtime)
+            const channel = supabase.channel('admin-devices')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'devices' }, (payload) => {
+                    setDevices(prev => {
+                        const index = prev.findIndex(d => d.id === payload.new.id)
+                        if (index !== -1) {
+                            const newDevices = [...prev]
+                            newDevices[index] = { ...newDevices[index], ...payload.new }
+                            return newDevices
+                        }
+                        return prev
+                    })
+                })
+                .subscribe()
+            
+            return () => { supabase.removeChannel(channel) }
         }
-    }, [activeTab])
+    }, [activeTab, loading])
     const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
     const [bulkUpdateValue, setBulkUpdateValue] = useState('')
     const [showBulkVideoModal, setShowBulkVideoModal] = useState(false)
@@ -215,6 +232,21 @@ export default function AdminDashboard() {
         if (error) alert('Hata: ' + error.message)
         else { alert('Sifreniz guncellendi.'); setAdminOldPw(''); setAdminNewPw(''); setAdminConfirmPw(''); setShowAdminSettings(false) }
     }
+    const handleAdminPasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (adminNewPw !== adminConfirmPw) { alert('Yeni şifreler eşleşmiyor'); return }
+        const { error } = await supabase.rpc('change_user_password', {
+            old_password: adminOldPw,
+            new_password: adminNewPw
+        })
+        if (error) { alert('Hata: ' + error.message) }
+        else {
+            alert('Şifre başarıyla güncellendi')
+            setShowAdminSettings(false)
+            setAdminOldPw(''); setAdminNewPw(''); setAdminConfirmPw('')
+        }
+    }
+
     const fetchDevices = async () => { const { data, error } = await supabase.from('devices').select('*, esp32_status, mega_status').order('name'); if (data) setDevices(data) }
     const fetchCustomers = async () => { const { data } = await supabase.from('profiles').select('*').order('full_name'); if (data) setCustomers(data) }
     const fetchTransactions = async () => { const { data } = await supabase.from('transactions').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setTransactions(data) }
@@ -402,6 +434,7 @@ export default function AdminDashboard() {
                     <SidebarItem icon={MessageSquare} label="Destek Merkezi" active={activeTab === 'support'} onClick={() => setActiveTab('support')} />
                     <SidebarItem icon={Bell} label="Bildirimler" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} />
                     <SidebarItem icon={Cpu} label="OTA Guncelleme" active={activeTab === 'ota'} onClick={() => setActiveTab('ota')} />
+                    <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === 'settings'} onClick={() => setShowAdminSettings(true)} />
                     <SidebarItem icon={Eye} label="Kullanici Gorunumu" active={false} onClick={() => router.push('/user')} />
                     <div className="border-t border-slate-100 my-2"></div>
                 </nav>
@@ -445,6 +478,7 @@ export default function AdminDashboard() {
                                 <SidebarItem icon={MessageSquare} label="Destek Merkezi" active={activeTab === 'support'} onClick={() => { setActiveTab('support'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Bell} label="Bildirim Geçmişi" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Zap} label="OTA Güncelleme" active={activeTab === 'ota'} onClick={() => { setActiveTab('ota'); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === 'settings'} onClick={() => { setShowAdminSettings(true); setShowMobileMenu(false) }} />
                                 <div className="h-10"></div> {/* Alt tarafın sıkışmaması için boşluk */}
                             </nav>
                             <div className="p-4 border-t border-slate-100 bg-slate-50/80 shrink-0 pb-8">
@@ -819,13 +853,31 @@ export default function AdminDashboard() {
             )}
 
             {showAdminSettings && (
-                <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center">
+                <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAdminSettings(false)} />
-                    <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative z-10">
-                        <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg">Ayarlar</h3><button onClick={() => setShowAdminSettings(false)} className="p-2 bg-slate-100 rounded-full"><X className="w-5 h-5" /></button></div>
-                        <div className="space-y-4">
-                            <button onClick={() => router.push('/user')} className="w-full py-3 bg-indigo-50 text-indigo-700 font-bold rounded-xl">Kullanici Gorunumu</button>
-                            <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="w-full py-3 bg-red-50 text-red-600 font-bold rounded-xl">Cikis Yap</button>
+                    <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative z-10 shadow-2xl overflow-y-auto" style={{ maxHeight: '90vh' }}>
+                        <div className="flex justify-between items-center mb-5 border-b border-slate-50 pb-4">
+                            <h3 className="font-black text-xl text-slate-800">Admin Ayarları</h3>
+                            <button onClick={() => setShowAdminSettings(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-all"><X className="w-5 h-5 text-slate-500" /></button>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Şifre Güvenliği</h4>
+                                <form onSubmit={handleAdminPasswordChange} className="space-y-3">
+                                    <input type="password" value={adminOldPw} onChange={e => setAdminOldPw(e.target.value)} placeholder="Mevcut Şifre" className="modern-input w-full" required />
+                                    <input type="password" value={adminNewPw} onChange={e => setAdminNewPw(e.target.value)} placeholder="Yeni Şifre" className="modern-input w-full" required />
+                                    <input type="password" value={adminConfirmPw} onChange={e => setAdminConfirmPw(e.target.value)} placeholder="Yeni Şifre (Tekrar)" className="modern-input w-full" required />
+                                    <button type="submit" className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                                        <Check className="w-5 h-5" /> Şifreyi Güncelle
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div className="border-t border-slate-100 pt-6 space-y-3">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Diğer İşlemler</h4>
+                                <button onClick={() => router.push('/user')} className="w-full py-4 bg-indigo-50 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-100 transition-all">Müşteri Görünümüne Geç</button>
+                                <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="w-full py-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition-all">Oturumu Kapat</button>
+                            </div>
                         </div>
                     </div>
                 </div>
