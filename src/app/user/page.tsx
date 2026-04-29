@@ -179,7 +179,8 @@ export default function UserDashboard() {
         if (!device) return alert('Lütfen makine seçin.')
         if (device.status !== 'online') return alert('Bu makine şu anda hizmet veremiyor.')
         
-        // Cihaz çevrimdışı kontrolü (5 dakikadan eski ping)
+        // Cihaz çevrimdışı kontrolü (Şimdilik devre dışı bırakıldı - Heartbeat senkronizasyonu için)
+        /*
         if (device.last_seen) {
             const lastSeenDate = new Date(device.last_seen);
             const now = new Date();
@@ -187,6 +188,7 @@ export default function UserDashboard() {
                 return alert('Makine ile bağlantı kurulamıyor. Makine kapalı veya interneti kesik olabilir.');
             }
         }
+        */
 
         const finalPrice = qrDynamicAmount || device.hizmet_fiyati || 50
         if (balance < finalPrice) return alert('Bakiye yetersiz!')
