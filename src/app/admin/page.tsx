@@ -124,7 +124,18 @@ export default function AdminDashboard() {
             setLoading(false)
         }
         init()
-        const sub = supabase.channel('admin-db').on('postgres_changes', { event: '*', schema: 'public' }, () => { fetchDevices(); fetchCustomers(); fetchTransactions(); fetchTickets(); fetchSentNotifications() }).subscribe()
+        const sub = supabase.channel('admin-db').on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+            // Devices haricindekileri genel fetch ile guncelle (kisisel tercihe gore optimize edilebilir)
+            if (payload.table !== 'devices') {
+                fetchCustomers(); fetchTransactions(); fetchTickets(); fetchSentNotifications();
+            }
+        }).subscribe()
+
+        const deviceSub = supabase.channel('admin-devices')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'devices' }, (payload) => {
+                setDevices(current => current.map(d => d.id === payload.new.id ? { ...d, ...payload.new } : d));
+            })
+            .subscribe();
 
         const chatSub = supabase.channel('admin-chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload: any) => {
             if (selectedTicket && payload.new.ticket_id === selectedTicket.id) fetchReplies(selectedTicket.id)
@@ -138,7 +149,11 @@ export default function AdminDashboard() {
             )
         }
 
-        return () => { supabase.removeChannel(sub); supabase.removeChannel(chatSub) }
+        return () => { 
+            supabase.removeChannel(sub); 
+            supabase.removeChannel(deviceSub);
+            supabase.removeChannel(chatSub); 
+        }
     }, [selectedTicket])
 
 
