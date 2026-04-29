@@ -798,59 +798,60 @@ const findCoordinates = () => {
                                             <h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors">{device.name}</h3>
                                             <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" /> {device.location}</p>
                                         </div>
-                                            <div className="flex flex-col items-end gap-1.5">
-                                                <div className="relative">
-                                                    <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[10px] font-black px-2 py-1 rounded-full uppercase flex items-center gap-1 cursor-pointer hover:opacity-80 shadow-sm transition-all ${device.status === 'online' ? 'bg-emerald-500 text-white' : device.status === 'offline' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>
-                                                        {device.status} <ChevronDown className="w-3 h-3" />
-                                                    </button>
-                                                    {showStatusMenu === device.id && (
-                                                        <div className="absolute right-0 top-8 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[120px] animate-fade-in-up">
-                                                            <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Online</button>
-                                                            <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-amber-50 text-amber-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Bakim</button>
-                                                            <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-red-50 text-red-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Offline</button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase shadow-sm border ${
-                                                    !device.work_status || device.work_status === 'idle' ? 'bg-slate-50 text-slate-400 border-slate-100' : 
-                                                    device.work_status === 'disinfecting' ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' :
-                                                    device.work_status === 'drying' ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse' :
-                                                    device.work_status === 'perfume' ? 'bg-purple-50 text-purple-600 border-purple-100 animate-pulse' :
-                                                    device.work_status === 'finished' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                                    'bg-blue-50 text-blue-600 border-blue-100'
-                                                }`}>
-                                                    MAKİNE: {!device.work_status || device.work_status === 'idle' ? 'BOŞTA' : 
-                                                              device.work_status === 'disinfecting' ? 'DEZENFEKTE' : 
-                                                              device.work_status === 'drying' ? 'KURUTUYOR' : 
-                                                              device.work_status === 'perfume' ? 'PARFÜM' : 
-                                                              device.work_status === 'finished' ? 'TAMAMLANDI' : 
-                                                              device.work_status.toUpperCase()}
-                                                </span>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="relative">
+                                                <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase flex items-center gap-1 cursor-pointer hover:opacity-80 transition-all shadow-sm ${device.status === 'online' ? 'bg-emerald-500 text-white' : device.status === 'offline' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>
+                                                    {device.status} <ChevronDown className="w-3 h-3" />
+                                                </button>
+                                                {showStatusMenu === device.id && (
+                                                    <div className="absolute right-0 top-8 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[120px] animate-fade-in-up">
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'online')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Online</button>
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'maintenance')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-amber-50 text-amber-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Bakim</button>
+                                                        <button onClick={() => handleUpdateStatus(device.id, 'offline')} className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-red-50 text-red-600 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Offline</button>
+                                                    </div>
+                                                )}
                                             </div>
+                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase border shadow-sm ${
+                                                !device.work_status || device.work_status === 'idle' ? 'bg-slate-50 text-slate-400 border-slate-100' : 
+                                                device.work_status === 'disinfecting' ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' :
+                                                device.work_status === 'drying' ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse' :
+                                                device.work_status === 'perfume' ? 'bg-purple-50 text-purple-600 border-purple-100 animate-pulse' :
+                                                device.work_status === 'finished' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                                'bg-blue-50 text-blue-600 border-blue-100'
+                                            }`}>
+                                                {!device.work_status || device.work_status === 'idle' ? 'BOŞTA' : 
+                                                  device.work_status === 'disinfecting' ? 'DEZENFEKTE' : 
+                                                  device.work_status === 'drying' ? 'KURUTUYOR' : 
+                                                  device.work_status === 'perfume' ? 'PARFÜM' : 
+                                                  device.work_status === 'finished' ? 'TAMAMLANDI' : 
+                                                  device.work_status.toUpperCase()}
+                                            </span>
                                         </div>
+                                    </div>
 
-                                        {/* Sıvı Seviyesi Göstergesi */}
-                                        <div className="mt-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
-                                            <div className="flex justify-between items-center mb-1.5">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                                    <Zap className={`w-3 h-3 ${device.sivi_seviye && device.sivi_seviye < 20 ? 'text-red-500 animate-bounce' : 'text-blue-400'}`} />
-                                                    Sıvı Seviyesi
-                                                </span>
-                                                <span className={`text-[11px] font-black ${device.sivi_seviye && device.sivi_seviye < 20 ? 'text-red-500 animate-pulse' : 'text-slate-700'}`}>
-                                                    %{device.sivi_seviye || 0}
-                                                </span>
-                                            </div>
-                                            <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
-                                                <div 
-                                                    className={`h-full transition-all duration-1000 ease-out ${
-                                                        (device.sivi_seviye || 0) < 20 ? 'bg-gradient-to-r from-red-500 to-rose-400' : 
-                                                        (device.sivi_seviye || 0) < 50 ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
-                                                        'bg-gradient-to-r from-brand-primary to-blue-400'
-                                                    }`} 
-                                                    style={{ width: `${device.sivi_seviye || 0}%` }} 
-                                                />
-                                            </div>
+                                    {/* Sıvı Seviyesi */}
+                                    <div className="mt-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                <Zap className={`w-3 h-3 ${device.sivi_seviye && device.sivi_seviye < 20 ? 'text-red-500 animate-bounce' : 'text-blue-400'}`} />
+                                                Sıvı Seviyesi
+                                            </span>
+                                            <span className={`text-[10px] font-black ${device.sivi_seviye && device.sivi_seviye < 20 ? 'text-red-500 animate-pulse' : 'text-slate-600'}`}>
+                                                %{device.sivi_seviye || 0}
+                                            </span>
                                         </div>
+                                        <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                            <div 
+                                                className={`h-full transition-all duration-1000 ${
+                                                    (device.sivi_seviye || 0) < 20 ? 'bg-red-500' : 
+                                                    (device.sivi_seviye || 0) < 50 ? 'bg-amber-500' :
+                                                    'bg-brand-primary'
+                                                }`} 
+                                                style={{ width: `${device.sivi_seviye || 0}%` }} 
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
                                         <div className="flex flex-col gap-1">
                                             <div className="text-sm font-black text-brand-primary">{device.hizmet_fiyati} TL</div>
