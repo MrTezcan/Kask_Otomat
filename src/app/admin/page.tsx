@@ -2,7 +2,7 @@
 // Deployment Trigger: Realtime Heartbeat & Status Separation
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap } from 'lucide-react'
+import { Activity, Settings, ChevronLeft, RefreshCw, AlertTriangle, Search, Server, MapPin, Users, Wallet, Plus, X, CreditCard, LogOut, Check, LayoutDashboard, Pen, Trash2, MessageSquare, Clock, Eye, Bell, Send, ChevronDown, Upload, Cpu, Zap, Monitor } from 'lucide-react'
 import Logo from '@/components/Logo'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -824,13 +824,20 @@ const findCoordinates = () => {
                                             <div className="relative">
                                                 {/* Fiziksel Baglanti Durumu (Heartbeat Diagnostic) */}
                                                 {(() => {
-                                                    const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 120000;
-                                                    const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 120000;
+                                                    const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000;
+                                                    const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000;
                                                     const megaConnected = device.mega_status === true;
+                                                    const hasHardwareFailure = device.status === 'online' && (!espConnected || !tabletConnected || !megaConnected);
                                                     
                                                     return (
                                                         <div className="flex flex-col items-end gap-2">
-                                                            <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                                            {hasHardwareFailure && (
+                                                                <div className="absolute top-0 left-0 right-0 bg-red-600 text-white text-[9px] font-black py-1 px-3 rounded-t-2xl flex items-center justify-center gap-1.5 animate-pulse z-10 shadow-lg">
+                                                                    <AlertTriangle className="w-3 h-3" />
+                                                                    KRİTİK DONANIM HATASI - MÜDAHALE GEREKLİ!
+                                                                </div>
+                                                            )}
+                                                            <div className={`flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg border ${hasHardwareFailure ? 'border-red-200 bg-red-50' : 'border-slate-100'}`}>
                                                                 <div className="flex flex-col items-center px-1 border-r border-slate-200">
                                                                     <Cpu className={`w-3 h-3 ${espConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
                                                                     <span className="text-[7px] font-black text-slate-400 mt-0.5">ESP</span>
@@ -845,11 +852,11 @@ const findCoordinates = () => {
                                                                 </div>
                                                             </div>
                                                             <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer border shadow-sm ${
-                                                                device.status === 'online' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
+                                                                device.status === 'online' ? (hasHardwareFailure ? 'bg-red-500 text-white border-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600') : 
                                                                 device.status === 'maintenance' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
                                                                 'bg-slate-50 border-slate-100 text-slate-500'
                                                             }`}>
-                                                                MOD: {device.status === 'online' ? 'AKTIF' : device.status === 'maintenance' ? 'BAKIM' : 'KAPALI'} <ChevronDown className="w-2.5 h-2.5" />
+                                                                MOD: {device.status === 'online' ? (hasHardwareFailure ? 'HATA' : 'AKTIF') : device.status === 'maintenance' ? 'BAKIM' : 'KAPALI'} <ChevronDown className="w-2.5 h-2.5" />
                                                             </button>
                                                         </div>
                                                     );
