@@ -930,9 +930,10 @@ const findCoordinates = () => {
                                     </div>
                                     {showStatusMenu === device.id && <div className="fixed inset-0 z-20" onClick={() => setShowStatusMenu(null)}></div>}
                                 </div>
-                            ))}
-                        </div>
-                    )}
+                            );
+                        })}
+                    </div>
+                )}
                 </div>
             </main>
 
