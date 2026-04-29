@@ -167,6 +167,8 @@ export default function App() {
 
       if (data.status === 'maintenance') {
         setScreen('MAINTENANCE');
+      } else {
+        setScreen('VIDEO_LOOP');
       }
 
       setBasePrice(typeof data.hizmet_fiyati === 'number' ? data.hizmet_fiyati : 25);
@@ -187,9 +189,8 @@ export default function App() {
         const success = await fetchDeviceData(savedDeviceId);
         if (success) {
           setDeviceId(savedDeviceId);
-          setScreen('VIDEO_LOOP');
-        } else {
-          // fetchDeviceData icinde zaten SETUP'a yonlendirme yapildi
+          // fetchDeviceData zaten maintenance kontrolu yapiyor ve screen'i guncelliyor.
+          // Eger bakim modunda degilsek (fetchDeviceData tarafindan set edilmediyse) VIDEO_LOOP'a gecelim.
         }
       } else {
         const { data } = await supabase.from('devices').select('*').order('name');
@@ -336,10 +337,18 @@ export default function App() {
   }, [deviceId]);
 
   const handleSelectDevice = async (id: string) => {
+    console.log('[handleSelectDevice] Secilen id:', id);
     await AsyncStorage.setItem('DEVICE_ID', id);
     setDeviceId(id);
-    await fetchDeviceData(id);
-    setScreen('VIDEO_LOOP');
+    const success = await fetchDeviceData(id);
+    // fetchDeviceData icinde zaten setScreen('MAINTENANCE') yapiliyor eger durum uygunsa
+    // Eger bakim modunda degilsek videoya gec
+    if (success) {
+       // Bu noktada fetchDeviceData calisti ve eger bakim modundaysa screen MAINTENANCE oldu.
+       // Eger hala SETUP veya baska bir yerdeysek videoya gecelim.
+       // Not: fetchDeviceData icindeki setScreen asenkron oldugu icin direkt state kontrolu bazen yaniltabilir,
+       // ama fetchDeviceData icinde zaten bakim modu varsa setScreen('MAINTENANCE') yapiliyor.
+    }
   };
 
   const handleHiddenTap = async () => {
