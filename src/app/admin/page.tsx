@@ -812,55 +812,48 @@ const findCoordinates = () => {
 
                     {activeTab === 'devices' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
-                            {devices.map(device => (
-                                <div key={device.id} className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-brand-primary/30 transition-all group shadow-sm hover:shadow-md relative">
-                                    
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-lg group-hover:text-brand-primary transition-colors truncate">{device.name}</h3>
-                                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-1 truncate"><MapPin className="w-3 h-3" /> {device.location}</p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2 ml-4">
-                                            <div className="relative">
-                                                {/* Fiziksel Baglanti Durumu (Heartbeat Diagnostic) */}
-                                                {(() => {
-                                                    const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000;
-                                                    const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000;
-                                                    const megaConnected = device.mega_status === true;
-                                                    const hasHardwareFailure = device.status === 'online' && (!espConnected || !tabletConnected || !megaConnected);
-                                                    
-                                                    return (
-                                                        <div className="flex flex-col items-end gap-2">
-                                                            {hasHardwareFailure && (
-                                                                <div className="absolute top-0 left-0 right-0 bg-red-600 text-white text-[9px] font-black py-1 px-3 rounded-t-2xl flex items-center justify-center gap-1.5 animate-pulse z-10 shadow-lg">
-                                                                    <AlertTriangle className="w-3 h-3" />
-                                                                    KRİTİK DONANIM HATASI - MÜDAHALE GEREKLİ!
-                                                                </div>
-                                                            )}
-                                                            <div className={`flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg border ${hasHardwareFailure ? 'border-red-200 bg-red-50' : 'border-slate-100'}`}>
-                                                                <div className="flex flex-col items-center px-1 border-r border-slate-200">
-                                                                    <Cpu className={`w-3 h-3 ${espConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
-                                                                    <span className="text-[7px] font-black text-slate-400 mt-0.5">ESP</span>
-                                                                </div>
-                                                                <div className="flex flex-col items-center px-1 border-r border-slate-200">
-                                                                    <Zap className={`w-3 h-3 ${megaConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
-                                                                    <span className="text-[7px] font-black text-slate-400 mt-0.5">MEGA</span>
-                                                                </div>
-                                                                <div className="flex flex-col items-center px-1">
-                                                                    <Monitor className={`w-3 h-3 ${tabletConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
-                                                                    <span className="text-[7px] font-black text-slate-400 mt-0.5">TBL</span>
-                                                                </div>
+                            {devices.map(device => {
+                                const now = new Date();
+                                const espConnected = device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000;
+                                const tabletConnected = device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 60000;
+                                const megaConnected = device.mega_status === true;
+                                const hasHardwareFailure = device.status === 'online' && (!espConnected || !tabletConnected || !megaConnected);
+
+                                return (
+                                    <div key={device.id} className={`bg-white p-5 rounded-2xl border transition-all group shadow-sm hover:shadow-md relative ${hasHardwareFailure ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)] ring-1 ring-red-500/50' : 'border-slate-100 hover:border-brand-primary/30'}`}>
+                                        
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className={`font-bold text-lg transition-colors truncate ${hasHardwareFailure ? 'text-red-600' : 'group-hover:text-brand-primary'}`}>{device.name}</h3>
+                                                <p className="text-xs text-slate-500 flex items-center gap-1 mt-1 truncate"><MapPin className="w-3 h-3" /> {device.location}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2 ml-4">
+                                                <div className="relative">
+                                                    {/* Fiziksel Baglanti Durumu (Heartbeat Diagnostic) */}
+                                                    <div className="flex flex-col items-end gap-2">
+                                                        <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-colors ${hasHardwareFailure ? 'border-red-200 bg-red-50' : 'border-slate-100 bg-slate-50'}`}>
+                                                            <div className="flex flex-col items-center px-1 border-r border-slate-200">
+                                                                <Cpu className={`w-3 h-3 ${espConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
+                                                                <span className="text-[7px] font-black text-slate-400 mt-0.5">ESP</span>
                                                             </div>
-                                                            <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer border shadow-sm ${
-                                                                device.status === 'online' ? (hasHardwareFailure ? 'bg-red-500 text-white border-red-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600') : 
-                                                                device.status === 'maintenance' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
-                                                                'bg-slate-50 border-slate-100 text-slate-500'
-                                                            }`}>
-                                                                MOD: {device.status === 'online' ? (hasHardwareFailure ? 'HATA' : 'AKTIF') : device.status === 'maintenance' ? 'BAKIM' : 'KAPALI'} <ChevronDown className="w-2.5 h-2.5" />
-                                                            </button>
+                                                            <div className="flex flex-col items-center px-1 border-r border-slate-200">
+                                                                <Zap className={`w-3 h-3 ${megaConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
+                                                                <span className="text-[7px] font-black text-slate-400 mt-0.5">MEGA</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-center px-1">
+                                                                <Monitor className={`w-3 h-3 ${tabletConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
+                                                                <span className="text-[7px] font-black text-slate-400 mt-0.5">TBL</span>
+                                                            </div>
                                                         </div>
-                                                    );
-                                                })()}
+                                                        <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 cursor-pointer border shadow-sm transition-all ${
+                                                            device.status === 'online' ? (hasHardwareFailure ? 'bg-red-600 text-white border-red-700 animate-bounce' : 'bg-emerald-50 border-emerald-100 text-emerald-600') : 
+                                                            device.status === 'maintenance' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
+                                                            'bg-slate-50 border-slate-100 text-slate-500'
+                                                        }`}>
+                                                            MOD: {device.status === 'online' ? (hasHardwareFailure ? 'HATA' : 'AKTIF') : device.status === 'maintenance' ? 'BAKIM' : 'KAPALI'} <ChevronDown className="w-2.5 h-2.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                                 
                                                 {showStatusMenu === device.id && (
                                                     <div className="absolute right-0 top-12 bg-white border border-slate-100 rounded-xl shadow-xl p-1 z-30 min-w-[130px] animate-fade-in-up">
