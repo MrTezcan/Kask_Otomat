@@ -668,6 +668,7 @@ export default function AdminDashboard() {
                                                             <div className="flex flex-col items-center px-1 border-r border-slate-200">
                                                                 <Cpu className={`w-3 h-3 ${espConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
                                                                 <span className="text-[7px] font-black text-slate-400 mt-0.5">ESP</span>
+                                                                <span className="text-[6px] font-bold text-brand-primary">{device.heartbeat_count || 0}</span>
                                                             </div>
                                                             <div className="flex flex-col items-center px-1 border-r border-slate-200">
                                                                 <Zap className={`w-3 h-3 ${megaConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
@@ -677,6 +678,9 @@ export default function AdminDashboard() {
                                                                 <Monitor className={`w-3 h-3 ${tabletConnected ? 'text-emerald-500' : 'text-red-500 animate-pulse'}`} />
                                                                 <span className="text-[7px] font-black text-slate-400 mt-0.5">TBL</span>
                                                             </div>
+                                                        </div>
+                                                        <div className="text-[8px] font-bold text-slate-400 italic">
+                                                            Son: {device.last_seen ? new Date(device.last_seen).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Hiç'}
                                                         </div>
                                                         <button onClick={() => setShowStatusMenu(showStatusMenu === device.id ? null : device.id)} className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1 border shadow-sm ${device.status === 'online' ? (hasHardwareFailure ? 'bg-red-600 text-white border-red-700 animate-bounce' : 'bg-emerald-50 text-emerald-600') : 'bg-slate-50 text-slate-500'}`}>
                                                             MOD: {device.status === 'online' ? (hasHardwareFailure ? 'HATA' : 'AKTIF') : device.status.toUpperCase()} <ChevronDown className="w-2.5 h-2.5" />
