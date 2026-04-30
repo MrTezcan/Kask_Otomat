@@ -421,7 +421,7 @@ export default function AdminDashboard() {
                     <SidebarItem icon={MessageSquare} label="Destek Merkezi" active={activeTab === 'support'} onClick={() => setActiveTab('support')} />
                     <SidebarItem icon={Bell} label="Bildirimler" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} />
                     <SidebarItem icon={Cpu} label="OTA Guncelleme" active={activeTab === 'ota'} onClick={() => setActiveTab('ota')} />
-                    <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === 'settings'} onClick={() => setShowAdminSettings(true)} />
+                    <SidebarItem icon={Settings} label="Ayarlar" active={false} onClick={() => setShowAdminSettings(true)} />
                     <SidebarItem icon={Eye} label="Kullanici Gorunumu" active={false} onClick={() => router.push('/user')} />
                     <div className="border-t border-slate-100 my-2"></div>
                 </nav>
@@ -465,7 +465,7 @@ export default function AdminDashboard() {
                                 <SidebarItem icon={MessageSquare} label="Destek Merkezi" active={activeTab === 'support'} onClick={() => { setActiveTab('support'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Bell} label="Bildirim Geçmişi" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setShowMobileMenu(false) }} />
                                 <SidebarItem icon={Zap} label="OTA Güncelleme" active={activeTab === 'ota'} onClick={() => { setActiveTab('ota'); setShowMobileMenu(false) }} />
-                                <SidebarItem icon={Settings} label="Ayarlar" active={activeTab === 'settings'} onClick={() => { setShowAdminSettings(true); setShowMobileMenu(false) }} />
+                                <SidebarItem icon={Settings} label="Ayarlar" active={false} onClick={() => { setShowAdminSettings(true); setShowMobileMenu(false) }} />
                                 <div className="h-10"></div> {/* Alt tarafın sıkışmaması için boşluk */}
                             </nav>
                             <div className="p-4 border-t border-slate-100 bg-slate-50/80 shrink-0 pb-8">
