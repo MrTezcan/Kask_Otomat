@@ -12,7 +12,7 @@ const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
 type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number;
-    parfum_fiyati?: number; last_seen: string; tablet_last_seen?: string; mega_status?: boolean; esp32_status?: boolean; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string; }
+    parfum_fiyati?: number; last_seen: string; tablet_last_seen?: string; heartbeat_count?: number; mega_status?: boolean; esp32_status?: boolean; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
