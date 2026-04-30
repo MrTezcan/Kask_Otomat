@@ -644,9 +644,13 @@ export default function AdminDashboard() {
                     {activeTab === 'devices' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
                             {devices.map(device => {
-                                const now = currentTime;
-                                const espConnected = (device.esp32_status === true) && (device.last_seen && (now.getTime() - new Date(device.last_seen).getTime()) < 60000);
-                                const tabletConnected = (device.tablet_last_seen && (now.getTime() - new Date(device.tablet_last_seen).getTime()) < 45000);
+                                const espLastSeen = device.last_seen ? new Date(device.last_seen).getTime() : 0;
+                                const tblLastSeen = device.tablet_last_seen ? new Date(device.tablet_last_seen).getTime() : 0;
+                                const nowTime = currentTime.getTime();
+
+                                // Saat farklari icin 120 saniye tolerans ve mutlak deger kontrolu
+                                const espConnected = (device.esp32_status === true) && (espLastSeen > 0 && Math.abs(nowTime - espLastSeen) < 120000);
+                                const tabletConnected = (tblLastSeen > 0 && Math.abs(nowTime - tblLastSeen) < 120000);
                                 const megaConnected = (device.mega_status === true) && espConnected;
                                 const hasHardwareFailure = device.status === 'online' && (!espConnected || !megaConnected || !tabletConnected);
 
