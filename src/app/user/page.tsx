@@ -2,7 +2,7 @@
 // Deployment Trigger: Final UI & Maintenance Mode Support
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send } from 'lucide-react'
+import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send, Settings, Smartphone } from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
