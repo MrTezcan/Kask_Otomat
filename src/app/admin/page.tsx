@@ -244,8 +244,15 @@ export default function AdminDashboard() {
 
     const handleUploadOta = async () => {
         if (!otaVersion) return alert('Versiyon zorunludur')
-        if (otaUploadMode === 'file' && !otaFile) return alert('Lutfen bir dosya secin')
-        if (otaUploadMode === 'url' && !otaUrl) return alert('Lutfen bir URL girin')
+        
+        // Akilli Mod Secimi: URL varsa ve dosya yoksa URL moduna gec
+        let currentMode = otaUploadMode
+        if (otaUrl && !otaFile) currentMode = 'url'
+        if (otaFile) currentMode = 'file'
+
+        if (currentMode === 'file' && !otaFile) return alert('Lutfen bir dosya secin')
+        if (currentMode === 'url' && !otaUrl) return alert('Lutfen bir URL girin')
+        
         setOtaUploading(true)
         try {
             let firmwareUrl = otaUrl
@@ -258,7 +265,7 @@ export default function AdminDashboard() {
                 }
             }
 
-            if (otaUploadMode === 'file' && otaFile) {
+            if (currentMode === 'file' && otaFile) {
                 const filePath = `firmware/${otaVersion}/${otaFile.name}`
                 const { error: uploadError } = await supabase.storage.from('ota-firmware').upload(filePath, otaFile, { upsert: true })
                 if (uploadError) throw uploadError
@@ -611,10 +618,18 @@ export default function AdminDashboard() {
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                                 <div className="flex items-center gap-3 mb-6"><div className="p-3 bg-indigo-50 rounded-xl"><Cpu className="w-5 h-5 text-indigo-600" /></div><div><h3 className="font-bold text-slate-800">Yeni Firmware Kaydet</h3></div></div>
+                                <div className="flex gap-4 mb-4 p-1 bg-slate-50 rounded-xl w-fit">
+                                    <button onClick={() => setOtaUploadMode('file')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${otaUploadMode === 'file' ? 'bg-white shadow-sm text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}>Dosya Yükle</button>
+                                    <button onClick={() => setOtaUploadMode('url')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${otaUploadMode === 'url' ? 'bg-white shadow-sm text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}>Dış Bağlantı (URL)</button>
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Versiyon</label><input value={otaVersion} onChange={e => setOtaVersion(e.target.value)} className="modern-input" placeholder="v1.0.0" /></div>
+                                    <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Versiyon</label><input value={otaVersion} onChange={e => setOtaVersion(e.target.value)} className="modern-input" placeholder="v1.1.5" /></div>
                                     <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Aciklama</label><input value={otaDescription} onChange={e => setOtaDescription(e.target.value)} className="modern-input" placeholder="Guncelleme detayi" /></div>
-                                    <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Firmware URL</label><input value={otaUrl} onChange={e => setOtaUrl(e.target.value)} className="modern-input" placeholder="https://..." /></div>
+                                    {otaUploadMode === 'file' ? (
+                                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Firmware Dosyası (.bin)</label><input type="file" accept=".bin" onChange={e => setOtaFile(e.target.files?.[0] || null)} className="modern-input" /></div>
+                                    ) : (
+                                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Firmware URL</label><input value={otaUrl} onChange={e => setOtaUrl(e.target.value)} className="modern-input" placeholder="https://..." /></div>
+                                    )}
                                 </div>
                                 <button onClick={handleUploadOta} disabled={otaUploading} className="mt-4 btn-primary flex items-center gap-2">{otaUploading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} Kaydet</button>
                             </div>
