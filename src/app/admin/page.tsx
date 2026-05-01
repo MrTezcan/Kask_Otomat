@@ -730,9 +730,9 @@ export default function AdminDashboard() {
                                             <div className="flex flex-col gap-0.5">
                                                 <div className="text-sm font-black text-brand-primary tracking-tight">{device.hizmet_fiyati} TL</div>
                                                 <div className="text-[9px] text-slate-400 font-mono tracking-tighter uppercase">
-                                                    {device.firmware_version || 'v1.1.2'}
+                                                    ID: {device.id} | {device.firmware_version || 'v1.1.2'}
                                                     {device.ota_status && device.ota_status !== 'success' && (
-                                                        <span className={`ml-2 px-1.5 py-0.5 rounded-md font-bold ${device.ota_status.includes('fail') ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600 animate-pulse'}`}>
+                                                        <span className={`ml-2 px-1.5 py-0.5 rounded-md font-bold ${device.ota_status.includes('fail') ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-600 animate-pulse'}`}>
                                                             OTA: {device.ota_status.toUpperCase()}
                                                         </span>
                                                     )}
