@@ -704,7 +704,7 @@ export default function AdminDashboard() {
                             {devices.map(device => {
                                 const espLastSeen = device.last_seen ? new Date(device.last_seen).getTime() : 0;
                                 const tblLastSeen = device.tablet_last_seen ? new Date(device.tablet_last_seen).getTime() : 0;
-                                const nowTime = currentTime.getTime();
+                                const nowTime = now.getTime();
 
                                 // Saat farklari icin 120 saniye tolerans ve mutlak deger kontrolu
                                 const espConnected = (device.esp32_status === true) && (espLastSeen > 0 && Math.abs(nowTime - espLastSeen) < 120000);
@@ -903,7 +903,6 @@ export default function AdminDashboard() {
                                     <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Adres Detayı</label>
                                     <textarea value={newKioskAddress} onChange={e => setNewKioskAddress(e.target.value)} className="modern-input h-20 resize-none text-xs" placeholder="Konum seçildiğinde otomatik dolabilir veya manuel giriniz..." />
                                 </div>
-                            </div>
                             </div>
                         </div>
 
