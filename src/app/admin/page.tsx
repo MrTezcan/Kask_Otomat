@@ -252,7 +252,7 @@ export default function AdminDashboard() {
             
             // Google Drive Link Donusturucu
             if (firmwareUrl.includes('drive.google.com')) {
-                const idMatch = firmwareUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) || firmwareUrl.match(/id=([a-zA-?0-9-_]+)/);
+                const idMatch = firmwareUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) || firmwareUrl.match(/id=([a-zA-Z0-9-_]+)/);
                 if (idMatch && idMatch[1]) {
                     firmwareUrl = `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
                 }
