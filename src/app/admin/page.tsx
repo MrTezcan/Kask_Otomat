@@ -249,6 +249,15 @@ export default function AdminDashboard() {
         setOtaUploading(true)
         try {
             let firmwareUrl = otaUrl
+            
+            // Google Drive Link Donusturucu
+            if (firmwareUrl.includes('drive.google.com')) {
+                const idMatch = firmwareUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) || firmwareUrl.match(/id=([a-zA-?0-9-_]+)/);
+                if (idMatch && idMatch[1]) {
+                    firmwareUrl = `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+                }
+            }
+
             if (otaUploadMode === 'file' && otaFile) {
                 const filePath = `firmware/${otaVersion}/${otaFile.name}`
                 const { error: uploadError } = await supabase.storage.from('ota-firmware').upload(filePath, otaFile, { upsert: true })
