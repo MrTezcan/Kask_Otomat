@@ -877,6 +877,58 @@ export default function AdminDashboard() {
                 </div>
             )}
 
+            {showOtaDeployModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-[999999] animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Güncellemeyi Başlat</h3>
+                            <button onClick={() => setShowOtaDeployModal(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                <div className="text-xs font-bold text-indigo-400 uppercase mb-1">Seçili Versiyon</div>
+                                <div className="text-xl font-black text-indigo-700">{showOtaDeployModal.version}</div>
+                                <div className="text-xs text-indigo-500 mt-1">{showOtaDeployModal.description || 'Açıklama yok'}</div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-500 uppercase block">Hedef Cihazlar</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => setOtaTargetMode('all')} className={`p-3 rounded-xl border-2 font-bold text-sm transition-all ${otaTargetMode === 'all' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-100 text-slate-400'}`}>Tüm Cihazlar</button>
+                                    <button onClick={() => setOtaTargetMode('select')} className={`p-3 rounded-xl border-2 font-bold text-sm transition-all ${otaTargetMode === 'select' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-100 text-slate-400'}`}>Cihaz Seçimi</button>
+                                </div>
+                            </div>
+
+                            {otaTargetMode === 'select' && (
+                                <div className="max-h-48 overflow-y-auto space-y-2 custom-scrollbar pr-2">
+                                    {devices.map(d => (
+                                        <button key={d.id} onClick={() => setOtaSelectedDevices(prev => prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id])} className={`w-full p-3 rounded-xl border flex justify-between items-center transition-all ${otaSelectedDevices.includes(d.id) ? 'border-brand-primary bg-brand-primary/5' : 'border-slate-100'}`}>
+                                            <span className="text-xs font-bold text-slate-700">{d.name}</span>
+                                            {otaSelectedDevices.includes(d.id) && <Check className="w-4 h-4 text-brand-primary" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
+                                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                                <p className="text-[10px] text-amber-700 font-medium">Bu işlem seçili cihazlara güncelleme komutu gönderecek ve cihazlar yeniden başlayacaktır.</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex gap-3">
+                            <button onClick={() => setShowOtaDeployModal(null)} className="flex-1 py-4 bg-slate-50 text-slate-600 font-bold rounded-2xl hover:bg-slate-100 transition-all">Vazgeç</button>
+                            <button onClick={handleDeployOta} disabled={otaDeploying === showOtaDeployModal.id} className="flex-[2] py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                {otaDeploying === showOtaDeployModal.id ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />} Yüklemeyi Başlat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showAdminSettings && (
                 <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAdminSettings(false)} />
