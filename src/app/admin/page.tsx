@@ -12,7 +12,8 @@ const KioskMap = dynamic(() => import('@/components/KioskMap'), { ssr: false })
 const AddKioskMap = dynamic(() => import('@/components/AddKioskMap'), { ssr: false })
 
 type Device = { id: string; name: string; location: string; latitude?: number; longitude?: number; status: 'online' | 'offline' | 'maintenance'; hizmet_fiyati: number;
-    parfum_fiyati?: number; last_seen: string; tablet_last_seen?: string; heartbeat_count?: number; mega_status?: boolean; esp32_status?: boolean; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string; }
+    parfum_fiyati?: number; last_seen: string; tablet_last_seen?: string; heartbeat_count?: number; mega_status?: boolean; esp32_status?: boolean; firmware_version?: string; ota_status?: string; ota_updated_at?: string; video_url?: string; work_status?: string; liquid_level_pct?: number; alarm?: string; nayax_terminal_id?: string;
+    time_lock_sec?: number; time_wash_sec?: number; time_dry_sec?: number; time_perfume_sec?: number; time_finish_sec?: number; }
 type Customer = { id: string; email: string; full_name: string; balance: number; role: string; phone?: string }
 
 function StatCard({ title, value, icon, color }: { title: string, value: number, icon: any, color: string }) {
@@ -87,6 +88,7 @@ export default function AdminDashboard() {
     const [showAddKioskModal, setShowAddKioskModal] = useState(false)
     const [editingDevice, setEditingDevice] = useState<Device | null>(null)
     const [newDeviceId, setNewDeviceId] = useState(''); const [newKioskName, setNewKioskName] = useState(''); const [newKioskAddress, setNewKioskAddress] = useState(''); const [newKioskPrice, setNewKioskPrice] = useState('50'); const [newKioskPerfumePrice, setNewKioskPerfumePrice] = useState('5'); const [newKioskLocation, setNewKioskLocation] = useState<[number, number] | null>(null); const [newKioskVideoUrl, setNewKioskVideoUrl] = useState(''); const [newKioskNayaxId, setNewKioskNayaxId] = useState('');
+    const [newTimeLock, setNewTimeLock] = useState('2'); const [newTimeWash, setNewTimeWash] = useState('15'); const [newTimeDry, setNewTimeDry] = useState('30'); const [newTimePerfume, setNewTimePerfume] = useState('3'); const [newTimeFinish, setNewTimeFinish] = useState('5');
     const [addrProvince, setAddrProvince] = useState(''); const [addrDistrict, setAddrDistrict] = useState(''); const [addrStreet, setAddrStreet] = useState(''); const [isGeocoding, setIsGeocoding] = useState(false)
 
     const [showNotifModal, setShowNotifModal] = useState(false)
@@ -146,6 +148,12 @@ export default function AdminDashboard() {
     const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
     const [bulkUpdateValue, setBulkUpdateValue] = useState('')
     const [showBulkVideoModal, setShowBulkVideoModal] = useState(false)
+    const [showBulkTimingModal, setShowBulkTimingModal] = useState(false)
+    const [bulkTimeLock, setBulkTimeLock] = useState('2')
+    const [bulkTimeWash, setBulkTimeWash] = useState('15')
+    const [bulkTimeDry, setBulkTimeDry] = useState('30')
+    const [bulkTimePerfume, setBulkTimePerfume] = useState('3')
+    const [bulkTimeFinish, setBulkTimeFinish] = useState('5')
     const [bulkVideoUrl, setBulkVideoUrl] = useState('')
     const [adminLocation, setAdminLocation] = useState<[number, number]>([41.0082, 28.9784])
     const [now, setNow] = useState(new Date())
@@ -310,7 +318,14 @@ export default function AdminDashboard() {
 
     const handleSaveKiosk = async () => {
         if (!newKioskLocation || !newKioskName) return alert('Lutfen tum alanlari doldurun')
-        const data: any = { name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), last_seen: new Date().toISOString(), video_url: newKioskVideoUrl }
+        const data: any = { 
+            name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], 
+            hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), 
+            last_seen: new Date().toISOString(), video_url: newKioskVideoUrl,
+            time_lock_sec: parseInt(newTimeLock) || 2, time_wash_sec: parseInt(newTimeWash) || 15,
+            time_dry_sec: parseInt(newTimeDry) || 30, time_perfume_sec: parseInt(newTimePerfume) || 3,
+            time_finish_sec: parseInt(newTimeFinish) || 5
+        }
         if (newKioskNayaxId.trim()) data.nayax_terminal_id = newKioskNayaxId.trim()
         let error;
         if (editingDevice) {
@@ -372,6 +387,24 @@ export default function AdminDashboard() {
             await supabase.from('devices').update({ video_url: bulkVideoUrl })
             alert('Tum cihazlarin videosu guncellendi'); setShowBulkVideoModal(false); setBulkVideoUrl(''); fetchDevices()
         } catch { alert('Hata olustu') }
+        finally { setLoading(false) }
+    }
+
+    const handleBulkTimingUpdate = async () => {
+        if (!confirm('Tüm cihazların zamanlama (saniye) ayarları güncellenecek. Bu işlem geri alınamaz. Emin misiniz?')) return
+        setLoading(true)
+        try {
+            await supabase.from('devices').update({ 
+                time_lock_sec: parseInt(bulkTimeLock) || 2, 
+                time_wash_sec: parseInt(bulkTimeWash) || 15,
+                time_dry_sec: parseInt(bulkTimeDry) || 30, 
+                time_perfume_sec: parseInt(bulkTimePerfume) || 3,
+                time_finish_sec: parseInt(bulkTimeFinish) || 5
+            })
+            alert('Tüm cihazların zamanlama ayarları başarıyla güncellendi!'); 
+            setShowBulkTimingModal(false); 
+            fetchDevices()
+        } catch { alert('Güncelleme sırasında bir hata oluştu.') }
         finally { setLoading(false) }
     }
 
@@ -501,7 +534,8 @@ export default function AdminDashboard() {
                             <p className="text-sm text-slate-500 mt-1">Sistem yonetimi ve raporlama</p>
                         </div>
                         {activeTab === 'devices' && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                                <button onClick={() => setShowBulkTimingModal(true)} className="bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"><Clock className="w-4 h-4" /> Toplu Zamanlama Güncelle</button>
                                 <button onClick={() => setShowBulkUpdateModal(true)} className="bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"><CreditCard className="w-4 h-4" /> Toplu Fiyat Guncelle</button>
                                 <button onClick={() => { setBulkVideoUrl(''); setShowBulkVideoModal(true) }} className="bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"><Zap className="w-4 h-4" /> Toplu Video Guncelle</button>
                                 <button onClick={() => { setEditingDevice(null); setNewDeviceId(''); setNewKioskName(''); setNewKioskPrice('50'); setNewKioskPerfumePrice('5'); setNewKioskLocation(null); setNewKioskAddress(''); setNewKioskVideoUrl(''); setShowAddKioskModal(true) }} className="bg-brand-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 transition-all flex items-center gap-2"><Plus className="w-4 h-4" /> Yeni Cihaz Ekle</button>
@@ -757,6 +791,11 @@ export default function AdminDashboard() {
                                                         } else {
                                                             setNewKioskLocation(null);
                                                         }
+                                                        setNewTimeLock(device.time_lock_sec?.toString() || '2');
+                                                        setNewTimeWash(device.time_wash_sec?.toString() || '15');
+                                                        setNewTimeDry(device.time_dry_sec?.toString() || '30');
+                                                        setNewTimePerfume(device.time_perfume_sec?.toString() || '3');
+                                                        setNewTimeFinish(device.time_finish_sec?.toString() || '5');
                                                         setShowAddKioskModal(true); 
                                                     }} 
                                                     className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all active:scale-95 cursor-pointer shadow-md"
@@ -835,6 +874,8 @@ export default function AdminDashboard() {
                                             </a>
                                         )}
                                     </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             
@@ -863,6 +904,33 @@ export default function AdminDashboard() {
                                 <div>
                                     <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Adres Detayı</label>
                                     <textarea value={newKioskAddress} onChange={e => setNewKioskAddress(e.target.value)} className="modern-input h-20 resize-none text-xs" placeholder="Konum seçildiğinde otomatik dolabilir veya manuel giriniz..." />
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 p-5 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><Clock className="w-4 h-4 text-brand-primary" /> Donanım Zamanlama Ayarları (Saniye)</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Kilitlenme</label>
+                                    <input type="number" value={newTimeLock} onChange={e => setNewTimeLock(e.target.value)} className="modern-input !py-2.5 !text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Yıkama/Sis</label>
+                                    <input type="number" value={newTimeWash} onChange={e => setNewTimeWash(e.target.value)} className="modern-input !py-2.5 !text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Kurutma</label>
+                                    <input type="number" value={newTimeDry} onChange={e => setNewTimeDry(e.target.value)} className="modern-input !py-2.5 !text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Parfüm</label>
+                                    <input type="number" value={newTimePerfume} onChange={e => setNewTimePerfume(e.target.value)} className="modern-input !py-2.5 !text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Bitiş Ekranı</label>
+                                    <input type="number" value={newTimeFinish} onChange={e => setNewTimeFinish(e.target.value)} className="modern-input !py-2.5 !text-sm" />
                                 </div>
                             </div>
                         </div>
@@ -924,6 +992,47 @@ export default function AdminDashboard() {
                             <button onClick={handleDeployOta} disabled={otaDeploying === showOtaDeployModal.id} className="flex-[2] py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2">
                                 {otaDeploying === showOtaDeployModal.id ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />} Yüklemeyi Başlat
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showBulkTimingModal && (
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowBulkTimingModal(false)} />
+                    <div className="bg-white w-full max-w-md rounded-3xl p-6 relative z-10 shadow-2xl">
+                        <div className="flex justify-between items-center mb-5">
+                            <h3 className="font-black text-xl text-slate-800">Toplu Zamanlama Güncelle</h3>
+                            <button onClick={() => setShowBulkTimingModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5" /></button>
+                        </div>
+                        <p className="text-sm text-slate-500 mb-6">Tüm cihazlar için saniye cinsinden donanım çalışma sürelerini belirleyin.</p>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 block mb-1">Kilitlenme (Sn)</label>
+                                <input type="number" value={bulkTimeLock} onChange={e => setBulkTimeLock(e.target.value)} className="modern-input" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 block mb-1">Yıkama/Sis (Sn)</label>
+                                <input type="number" value={bulkTimeWash} onChange={e => setBulkTimeWash(e.target.value)} className="modern-input" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 block mb-1">Kurutma (Sn)</label>
+                                <input type="number" value={bulkTimeDry} onChange={e => setBulkTimeDry(e.target.value)} className="modern-input" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 block mb-1">Parfüm (Sn)</label>
+                                <input type="number" value={bulkTimePerfume} onChange={e => setBulkTimePerfume(e.target.value)} className="modern-input" />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-xs font-bold text-slate-500 block mb-1">Bitiş Ekranı Süresi (Sn)</label>
+                                <input type="number" value={bulkTimeFinish} onChange={e => setBulkTimeFinish(e.target.value)} className="modern-input" />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowBulkTimingModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">İptal</button>
+                            <button onClick={handleBulkTimingUpdate} className="flex-1 py-3 bg-brand-primary text-white font-bold rounded-xl hover:opacity-90 shadow-lg">Tümüne Uygula</button>
                         </div>
                     </div>
                 </div>
