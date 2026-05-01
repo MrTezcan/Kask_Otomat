@@ -279,8 +279,8 @@ export default function AdminDashboard() {
             let targetIds: string[] = otaTargetMode === 'all' ? devices.map(d => d.id) : otaSelectedDevices
             if (targetIds.length === 0) { alert('Hiç cihaz seçilmedi'); setOtaDeploying(null); return }
             await supabase.from('devices').update({ ota_status: 'pending' }).in('id', targetIds)
-            const cmds = targetIds.map(id => supabase.from('commands').insert({
-                device_id: id, command: 'OTA_UPDATE', payload: release.firmware_url, ota_release_id: release.id, status: 'pending'
+            const cmds = targetIds.map(id => supabase.from('device_commands').insert({
+                device_id: id, command: 'OTA_UPDATE', payload: { url: release.firmware_url, version: release.version }, status: 'pending'
             }))
             await Promise.all(cmds)
             alert(`OTA komutu ${targetIds.length} cihaza gönderildi!`)
