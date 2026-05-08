@@ -50,7 +50,13 @@ export default function Register() {
 
         if (signUpError) {
             const msg = signUpError.message.toLowerCase()
-            if (msg.includes('already registered') || msg.includes('user already') || msg.includes('already been registered')) {
+            // 504 / timeout: kullanici olusturuldu ama mail gonderimi zaman asimina ugradi
+            // Kayit gercekte basarili, sadece mail gecikmeli gelecek
+            if (msg.includes('timeout') || msg.includes('504') || msg.includes('processing this request')) {
+                setSuccess(true)
+                setLoading(false)
+                return
+            } else if (msg.includes('already registered') || msg.includes('user already') || msg.includes('already been registered')) {
                 setError('Bu e-posta adresi zaten kullanimda.')
             } else if (msg.includes('password')) {
                 setError('Sifre gecersiz: ' + signUpError.message)
