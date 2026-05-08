@@ -93,7 +93,7 @@ export default function Home() {
                                 className="w-4 h-4 rounded border-slate-500 bg-slate-800 text-brand-primary" />
                             <span className="text-slate-500">Beni Hatırla</span>
                         </label>
-                        <a href="#" className="text-brand-primary hover:text-brand-accent transition-colors">Şifremi Unuttum</a>
+                        <a href="/forgot-password" onClick={(e) => { e.preventDefault(); router.push('/forgot-password') }} className="text-brand-primary hover:text-brand-accent transition-colors">Şifremi Unuttum</a>
                     </div>
 
                     <div className="space-y-3 pt-2">

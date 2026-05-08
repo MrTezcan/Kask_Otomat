@@ -101,7 +101,8 @@ export default function AdminDashboard() {
     const [notifType, setNotifType] = useState('info')
     const [showStatusMenu, setShowStatusMenu] = useState<string | null>(null)
     const [showMobileMenu, setShowMobileMenu] = useState(false)
-    const [currentTime, setCurrentTime] = useState(new Date())
+    const [now, setNow] = useState(new Date())
+    const [adminLocation, setAdminLocation] = useState<[number, number] | null>(null)
     const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false)
 
     // Uygulama Güncelleme (APK) State'leri
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
     const [appUploading, setAppUploading] = useState(false)
 
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+        const timer = setInterval(() => setNow(new Date()), 1000)
         return () => clearInterval(timer)
     }, [])
 
@@ -128,52 +129,6 @@ export default function AdminDashboard() {
     }, [showMobileMenu])
 
     useEffect(() => {
-        if (!loading) {
-            fetchDevices()
-            fetchCustomers()
-            fetchTransactions()
-            fetchTickets()
-            fetchOtaReleases()
-            fetchAppReleases()
-
-            // Gerçek zamanlı cihaz takibi (Realtime)
-            const channel = supabase.channel('admin-devices')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'devices' }, (payload) => {
-                    setDevices(prev => {
-                        const newData = payload.new as any
-                        const index = prev.findIndex(d => d.id === newData.id)
-                        if (index !== -1) {
-                            const newDevices = [...prev]
-                            newDevices[index] = { ...newDevices[index], ...newData }
-                            return newDevices
-                        }
-                        return prev
-                    })
-                })
-                .subscribe()
-            
-            return () => { supabase.removeChannel(channel) }
-        }
-    }, [activeTab, loading])
-    const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
-    const [bulkUpdateValue, setBulkUpdateValue] = useState('')
-    const [showBulkVideoModal, setShowBulkVideoModal] = useState(false)
-    const [showBulkTimingModal, setShowBulkTimingModal] = useState(false)
-    const [bulkTimeLock, setBulkTimeLock] = useState('2')
-    const [bulkTimeWash, setBulkTimeWash] = useState('15')
-    const [bulkTimeDry, setBulkTimeDry] = useState('30')
-    const [bulkTimePerfume, setBulkTimePerfume] = useState('3')
-    const [bulkTimeFinish, setBulkTimeFinish] = useState('5')
-    const [bulkVideoUrl, setBulkVideoUrl] = useState('')
-    const [adminLocation, setAdminLocation] = useState<[number, number]>([41.0082, 28.9784])
-    const [now, setNow] = useState(new Date())
-
-    useEffect(() => {
-        const interval = setInterval(() => setNow(new Date()), 30000)
-        return () => clearInterval(interval)
-    }, [])
-
-    useEffect(() => {
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) { router.push('/'); return }
@@ -185,43 +140,12 @@ export default function AdminDashboard() {
             setLoading(false)
         }
         init()
-        
-        fetchDevices();
-        fetchCustomers();
-        fetchTransactions();
-        fetchTickets();
 
         // Sayfa odaga geldiginde verileri tazele
         const handleFocus = () => {
             fetchDevices();
         };
         window.addEventListener('focus', handleFocus);
-
-        const channel = supabase
-            .channel('devices_realtime')
-            .on('postgres_changes', { event: '*', table: 'devices', schema: 'public' }, (payload) => {
-                fetchDevices();
-            })
-            .subscribe();
-
-        const sub = supabase.channel('admin-db').on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-            if (payload.table !== 'devices') {
-                fetchCustomers(); fetchTransactions(); fetchTickets(); fetchSentNotifications();
-            }
-        }).subscribe()
-
-        const deviceSub = supabase.channel('admin-devices')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'devices' }, (payload) => {
-                if (payload.new.liquid_level_pct !== undefined && payload.old && payload.new.liquid_level_pct !== payload.old.liquid_level_pct) {
-                    setLastMegaUpdates(prev => ({ ...prev, [payload.new.id]: Date.now() }));
-                }
-                setDevices(current => current.map(d => d.id === payload.new.id ? { ...d, ...payload.new } : d));
-            })
-            .subscribe();
-
-        const chatSub = supabase.channel('admin-chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload: any) => {
-            if (selectedTicket && payload.new.ticket_id === selectedTicket.id) fetchReplies(selectedTicket.id)
-        }).subscribe()
 
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -230,14 +154,48 @@ export default function AdminDashboard() {
             )
         }
 
-        return () => {
-            window.removeEventListener('focus', handleFocus);
-            supabase.removeChannel(channel);
-            supabase.removeChannel(sub); 
-            supabase.removeChannel(deviceSub);
-            supabase.removeChannel(chatSub); 
+        const interval = setInterval(() => setNow(new Date()), 30000)
+
+        if (!loading) {
+            fetchDevices()
+            fetchCustomers()
+            fetchTransactions()
+            fetchTickets()
+            fetchOtaReleases()
+            fetchAppReleases()
+            fetchSentNotifications()
+
+            // Consolidated Realtime Subscription
+            const channel = supabase.channel('admin-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'devices' }, (payload) => {
+                    if (payload.eventType === 'UPDATE') {
+                        const newData = payload.new as any
+                        const oldData = payload.old as any
+                        if (newData.liquid_level_pct !== undefined && oldData && newData.liquid_level_pct !== oldData.liquid_level_pct) {
+                            setLastMegaUpdates(prev => ({ ...prev, [newData.id]: Date.now() }));
+                        }
+                        setDevices(prev => prev.map(d => d.id === newData.id ? { ...d, ...newData } : d));
+                    } else {
+                        fetchDevices();
+                    }
+                })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload: any) => {
+                    if (selectedTicket && payload.new.ticket_id === selectedTicket.id) fetchReplies(selectedTicket.id)
+                })
+                .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+                    if (payload.table !== 'devices' && payload.table !== 'ticket_replies') {
+                        fetchCustomers(); fetchTransactions(); fetchTickets(); fetchSentNotifications();
+                    }
+                })
+                .subscribe()
+            
+            return () => { 
+                supabase.removeChannel(channel);
+                window.removeEventListener('focus', handleFocus);
+                clearInterval(interval);
+            }
         }
-    }, [selectedTicket])
+    }, [activeTab, loading, selectedTicket])
 
     const handleAdminPasswordChange = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -257,7 +215,18 @@ export default function AdminDashboard() {
     const fetchTransactions = async () => { const { data } = await supabase.from('transactions').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setTransactions(data) }
     const fetchTickets = async () => { const { data } = await supabase.from('tickets').select(`*, profiles:user_id(full_name, email)`).order('created_at', { ascending: false }); if (data) setTickets(data) }
     const fetchReplies = async (ticketId: string) => { const { data } = await supabase.from('ticket_replies').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true }); if (data) { setTicketReplies(data); setTimeout(() => { if (adminChatScrollRef.current) adminChatScrollRef.current.scrollTop = adminChatScrollRef.current.scrollHeight }, 100) } }
-    const fetchSentNotifications = async () => { const { data } = await supabase.from('notifications').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); if (data) setSentNotifications(data) }
+    const fetchSentNotifications = async () => { 
+        try {
+            const { data, error } = await supabase.from('notifications').select(`*, profiles:user_id(full_name)`).order('created_at', { ascending: false }).limit(50); 
+            if (error) {
+                console.warn('Bildirimler yüklenirken hata (Tablo olmayabilir):', error.message);
+                return;
+            }
+            if (data) setSentNotifications(data);
+        } catch (err) {
+            console.error('fetchSentNotifications catch:', err);
+        }
+    }
     const fetchOtaReleases = async () => { const { data } = await supabase.from('ota_releases').select('*').order('created_at', { ascending: false }); if (data) setOtaReleases(data) }
     const fetchAppReleases = async () => { 
         const { data } = await supabase.from('app_releases').select('*').order('created_at', { ascending: false }); 
@@ -393,7 +362,7 @@ export default function AdminDashboard() {
         const data: any = { 
             name: newKioskName, location: newKioskAddress, latitude: newKioskLocation[0], longitude: newKioskLocation[1], 
             hizmet_fiyati: parseInt(newKioskPrice), parfum_fiyati: parseInt(newKioskPerfumePrice), 
-            last_seen: new Date().toISOString(), video_url: newKioskVideoUrl,
+            video_url: newKioskVideoUrl,
             time_lock_sec: parseInt(newTimeLock) || 2, time_wash_sec: parseInt(newTimeWash) || 15,
             time_dry_sec: parseInt(newTimeDry) || 30, time_perfume_sec: parseInt(newTimePerfume) || 3,
             time_finish_sec: parseInt(newTimeFinish) || 5
@@ -405,7 +374,7 @@ export default function AdminDashboard() {
              error = res.error
         } else {
              if (!newDeviceId) return alert('Cihaz ID zorunludur')
-             const res = await supabase.from('devices').insert([{ ...data, id: newDeviceId, status: 'online' }])
+             const res = await supabase.from('devices').insert([{ ...data, id: newDeviceId, status: 'online', last_seen: new Date().toISOString() }])
              error = res.error
         }
         if (!error) { 
@@ -482,28 +451,106 @@ export default function AdminDashboard() {
 
     const handleReplyTicket = async () => {
         if (!replyText || !selectedTicket) return
+        const tId = selectedTicket.id
+        const currentReplyText = replyText
+        setReplyText('')
+        
         try {
-            const { error: rpcError } = await supabase.rpc('admin_reply_ticket', { ticket_id: selectedTicket.id, reply_text: replyText })
+            const { error: rpcError } = await supabase.rpc('admin_reply_ticket', { 
+                ticket_id: tId, 
+                reply_text: currentReplyText 
+            })
+            
             if (rpcError) throw rpcError
-            setReplyText(''); fetchTickets()
-        } catch (err: any) { alert('Hata: ' + err.message) }
+            
+            // Immediate fetch to bypass potential realtime lag
+            await fetchReplies(tId)
+            await fetchTickets()
+            // Removed alert to prevent UI blocking
+            console.log('Yanıt başarıyla gönderildi.');
+        } catch (err: any) { 
+            setReplyText(currentReplyText) // Restore text on error
+            alert('Yanıt Gönderilemedi: ' + err.message) 
+        }
     }
 
-    const handleResolveTicket = async () => { if (selectedTicket && confirm('Cozuldu mu?')) { await supabase.from('tickets').update({ status: 'closed' }).eq('id', selectedTicket.id); fetchTickets(); setSelectedTicket(null) } }
+    const handleResolveTicket = async () => { 
+        if (!selectedTicket) return;
+        if (confirm('Bu talebi çözüldü olarak işaretlemek istediğinize emin misiniz?')) { 
+            try {
+                const { error } = await supabase.from('tickets').update({ status: 'resolved' }).eq('id', selectedTicket.id);
+                if (error) throw error;
+                
+                alert('Talep başarıyla çözüldü.');
+                fetchTickets(); 
+                setSelectedTicket(null);
+            } catch (err: any) {
+                console.error('Talep Çözme Hatası:', err);
+                alert('Hata (Talep Çözülemedi): ' + err.message);
+            }
+        } 
+    }
 
     const handleAddBalance = async () => {
         if (!selectedCustomer || !balanceAmount) return
         const amt = balanceOperation === 'add' ? parseInt(balanceAmount) : -parseInt(balanceAmount)
-        const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.rpc('increment_balance', { user_id: selectedCustomer.id, amount: amt, admin_id: user?.id, p_payment_method: 'admin_manual' })
-        if (error) alert('Hata: ' + error.message)
-        else { alert('Bakiye guncellendi'); setShowBalanceModal(false); setBalanceAmount(''); fetchCustomers(); fetchTransactions() }
+        
+        // Try to call with both naming conventions to be safe, or pick the one from fix_functions.sql
+        const { error } = await supabase.rpc('increment_balance', { 
+            v_user_id: selectedCustomer.id, 
+            v_amount: amt
+        })
+
+        if (error) {
+            console.error('Bakiye Hatası:', error)
+            // Fallback for newer schema if exists
+            const { error: error2 } = await supabase.rpc('increment_balance', { 
+                user_id: selectedCustomer.id, 
+                amount: amt 
+            })
+            if (error2) alert('Hata (Bakiye): ' + error2.message)
+            else { 
+                alert('Bakiye guncellendi'); 
+                setShowBalanceModal(false); setBalanceAmount(''); fetchCustomers(); fetchTransactions() 
+            }
+        }
+        else { 
+            alert('Bakiye guncellendi'); 
+            setShowBalanceModal(false); 
+            setBalanceAmount(''); 
+            fetchCustomers(); 
+            fetchTransactions(); 
+        }
     }
 
     const handleSendNotification = async () => {
         if (!notifTitle || !notifMessage) return alert('Baslik ve mesaj zorunludur')
-        const { error } = await supabase.from('notifications').insert({ title: notifTitle, message: notifMessage, type: notifType, user_id: null })
-        if (!error) { alert('Bildirim gonderildi'); setShowNotifModal(false); setNotifTitle(''); setNotifMessage(''); fetchSentNotifications() }
+        try {
+            // user_id null means global broadcast
+            const { error } = await supabase.from('notifications').insert({ 
+                title: notifTitle, 
+                message: notifMessage, 
+                type: notifType, 
+                user_id: null,
+                is_read: false
+            })
+            if (error) throw error
+            
+            alert('Bildirim başarıyla gönderildi!'); 
+            setShowNotifModal(false); 
+            setNotifTitle(''); 
+            setNotifMessage(''); 
+            await fetchSentNotifications() 
+        } catch (err: any) { 
+            console.error('Bildirim Hatası:', err)
+            alert('Hata (Bildirim Gönderilemedi): ' + (err.message || 'Bilinmeyen hata'))
+        }
+    }
+
+    const handleDeleteAllNotifications = async () => {
+        if (!confirm('Tüm bildirim geçmişi silinecek. Emin misiniz?')) return
+        const { error } = await supabase.from('notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000') // Delete all
+        if (!error) { alert('Tüm bildirimler silindi'); fetchSentNotifications() }
         else { alert('Hata: ' + error.message) }
     }
 
@@ -708,7 +755,17 @@ export default function AdminDashboard() {
 
                     {activeTab === 'notifications' && (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-up">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center"><h3 className="font-bold text-lg text-slate-800">Gonderilen Bildirimler</h3><button onClick={() => setShowNotifModal(true)} className="bg-brand-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 flex items-center gap-2"><Send className="w-4 h-4" /> Yeni Bildirim Gonder</button></div>
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                                <h3 className="font-bold text-lg text-slate-800">Gonderilen Bildirimler</h3>
+                                <div className="flex gap-2">
+                                    <button onClick={handleDeleteAllNotifications} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold border border-red-100 flex items-center gap-2 hover:bg-red-100 transition-all">
+                                        <Trash2 className="w-4 h-4" /> Geçmişi Temizle
+                                    </button>
+                                    <button onClick={() => setShowNotifModal(true)} className="bg-brand-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-brand-primary/20 flex items-center gap-2">
+                                        <Send className="w-4 h-4" /> Yeni Bildirim Gonder
+                                    </button>
+                                </div>
+                            </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left">
                                     <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-bold border-b border-slate-100"><tr><th className="p-4">Tarih</th><th className="p-4">Baslik</th><th className="p-4">Tip</th><th className="p-4 text-right">Alici</th></tr></thead>
@@ -1281,6 +1338,45 @@ export default function AdminDashboard() {
                                 <button onClick={() => router.push('/user')} className="w-full py-4 bg-indigo-50 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-100 transition-all">Müşteri Görünümüne Geç</button>
                                 <button onClick={async () => { await supabase.auth.signOut(); router.push('/') }} className="w-full py-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition-all">Oturumu Kapat</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showNotifModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-[999999] animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Yeni Bildirim Gönder</h3>
+                            <button onClick={() => setShowNotifModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Bildirim Başlığı</label>
+                                <input type="text" value={notifTitle} onChange={e => setNotifTitle(e.target.value)} className="modern-input" placeholder="Örn: Kampanya Duyurusu" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Mesaj İçeriği</label>
+                                <textarea value={notifMessage} onChange={e => setNotifMessage(e.target.value)} className="modern-input h-24 resize-none" placeholder="Kullanıcılara iletilecek mesaj..." />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Bildirim Tipi</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => setNotifType('info')} className={`p-3 rounded-xl border-2 font-bold text-xs transition-all ${notifType === 'info' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-100 text-slate-400'}`}>Bilgilendirme</button>
+                                    <button onClick={() => setNotifType('warning')} className={`p-3 rounded-xl border-2 font-bold text-xs transition-all ${notifType === 'warning' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-100 text-slate-400'}`}>Uyarı / Hata</button>
+                                </div>
+                            </div>
+                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                <p className="text-[10px] text-blue-700 font-medium">Bu bildirim tüm aktif kullanıcılara anlık olarak iletilecektir.</p>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-8 flex gap-3">
+                            <button onClick={() => setShowNotifModal(false)} className="flex-1 py-4 bg-slate-50 text-slate-600 font-bold rounded-2xl hover:bg-slate-100 transition-all">Vazgeç</button>
+                            <button onClick={handleSendNotification} className="flex-[2] py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-slate-800 active:scale-95 transition-all">Gönder</button>
                         </div>
                     </div>
                 </div>

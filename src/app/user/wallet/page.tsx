@@ -123,8 +123,8 @@ export default function WalletPage() {
         if (user) {
             // 1. Bakiyeyi artır
             const { error } = await supabase.rpc('increment_balance', {
-                user_id: user.id,
-                amount: amount
+                v_user_id: user.id,
+                v_amount: parseInt(amount)
             })
             if (error) {
                 console.error('[Wallet] RPC hatası:', error)

@@ -224,7 +224,7 @@ export default function UserDashboard() {
         setPaymentProcessing('processing')
         try {
             // 1. Bakiyeyi çek
-            const { error: balError } = await supabase.rpc('increment_balance', { amount: -finalPrice, user_id: userId })
+            const { error: balError } = await supabase.rpc('increment_balance', { v_amount: -finalPrice, v_user_id: userId })
             if (balError) throw balError
             
             // 2. İşlemi kaydet
@@ -304,7 +304,7 @@ export default function UserDashboard() {
             if (handshakeResult === 'timeout') {
                 // İADE İŞLEMİ (REFUND)
                 setPaymentProcessing('refunding');
-                await supabase.rpc('increment_balance', { amount: finalPrice, user_id: userId });
+                await supabase.rpc('increment_balance', { v_amount: finalPrice, v_user_id: userId });
                 await supabase.from('transactions').insert({ user_id: userId, amount: finalPrice, type: 'deposit', description: 'İade: Makine Yanıt Vermedi', status: 'completed', payment_method: 'wallet', device_id: device.id });
                 await supabase.from('device_commands').update({ status: 'failed', error_msg: 'Handshake timeout' }).eq('id', cmdData[0].id);
                 
