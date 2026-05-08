@@ -112,9 +112,12 @@ export default function Home() {
                 </form>
 
                 <div className="mt-8 pt-6 border-t border-slate-200 text-center">
-                    <button className="inline-flex items-center text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors group">
+                    <button 
+                        onClick={() => router.push('/download')}
+                        className="inline-flex items-center text-xs font-medium text-slate-500 hover:text-brand-primary transition-colors group cursor-pointer bg-transparent border-none"
+                    >
                         <Smartphone className="h-4 w-4 mr-1 group-hover:text-brand-accent transition-colors" />
-                        Mobil Uygulamaı İndir
+                        Mobil Uygulamayı İndir
                     </button>
                 </div>
             </div>

@@ -1,6 +1,14 @@
 import Image from 'next/image';
 
-export default function Logo({ size = 'medium', className = '' }: { size?: 'small' | 'medium' | 'large', className?: string }) {
+export default function Logo({ 
+    size = 'medium', 
+    className = '',
+    variant = 'light'
+}: { 
+    size?: 'small' | 'medium' | 'large', 
+    className?: string,
+    variant?: 'light' | 'dark'
+}) {
     const sizes = {
         small: 32,
         medium: 48,
@@ -12,6 +20,8 @@ export default function Logo({ size = 'medium', className = '' }: { size?: 'smal
         medium: 'text-2xl',
         large: 'text-5xl'
     }
+
+    const textColor = variant === 'light' ? 'text-slate-900' : 'text-white';
 
     return (
         <div className={`flex items-center gap-3 ${className}`}>
@@ -28,10 +38,10 @@ export default function Logo({ size = 'medium', className = '' }: { size?: 'smal
 
             {size !== 'small' && (
                 <div className="flex flex-col justify-center">
-                    <h1 className={`font-black tracking-tighter text-slate-900 leading-none ${textSizes[size]}`}>
+                    <h1 className={`font-black tracking-tighter leading-none ${textColor} ${textSizes[size]}`}>
                         FRESH<span className="text-emerald-600">RIDER</span>
                     </h1>
-                    <span className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-0.5 ml-0.5">
+                    <span className={`text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5 ml-0.5 ${variant === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
                         Hygiene Systems
                     </span>
                 </div>

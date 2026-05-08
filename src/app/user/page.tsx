@@ -1,8 +1,8 @@
 'use client'
-
+// Deployment Trigger: Final UI & Maintenance Mode Support
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send } from 'lucide-react'
+import { Activity, Bell, ChevronRight, MapPin, User, Wallet, Check, QrCode, Sliders, Menu, X, Send, Settings, Smartphone } from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
@@ -84,6 +84,30 @@ export default function UserDashboard() {
     useEffect(() => {
         fetchProfile()
         fetchDevices()
+        
+        // Kiosk Identification Logic
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const kioskId = params.get('kiosk');
+            if (kioskId) {
+                localStorage.setItem('freshrider_kiosk_id', kioskId);
+                console.log('[Kiosk] Cihaz ID Hafizaya Kaydedildi:', kioskId);
+            }
+        }
+        
+        // Tablet Heartbeat Logic: If this is a kiosk tablet, report status
+        const heartbeatInterval = setInterval(async () => {
+            const savedKioskId = localStorage.getItem('freshrider_kiosk_id');
+            const targetId = savedKioskId || paymentConfirmDevice?.id;
+            
+            if (targetId) {
+                const { error } = await supabase.from('devices')
+                    .update({ tablet_last_seen: new Date().toISOString() })
+                    .eq('id', targetId);
+                if (error) console.error('[Heartbeat] Hata:', error.message);
+            }
+        }, 30000);
+
         const sub = supabase.channel('user-bal').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => setBalance(payload.new.balance)).subscribe()
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -95,8 +119,11 @@ export default function UserDashboard() {
                 () => { }, { enableHighAccuracy: true }
             )
         }
-        return () => { supabase.removeChannel(sub) }
-    }, [])
+        return () => { 
+            supabase.removeChannel(sub);
+            clearInterval(heartbeatInterval);
+        }
+    }, [paymentConfirmDevice?.id])
 
     useEffect(() => { if (showSettings && settingsTab === 'support') fetchTickets() }, [settingsTab, showSettings])
 
@@ -117,11 +144,29 @@ export default function UserDashboard() {
         fetchNotifications()
         const ticketSub = supabase.channel('user-tickets').on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `user_id=eq.${userId}` }, () => { fetchTickets() }).subscribe()
         const notifSub = supabase.channel('user-notifs').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload: any) => { if (payload.new.user_id === userId || payload.new.user_id === null) fetchNotifications() }).subscribe()
-        const chatSub = supabase.channel('user-chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload: any) => {
-            if (selectedTicket && payload.new.ticket_id === selectedTicket.id) fetchReplies(selectedTicket.id)
-        }).subscribe()
-        return () => { supabase.removeChannel(ticketSub); supabase.removeChannel(notifSub); supabase.removeChannel(chatSub) }
-    }, [userId, selectedTicket])
+        const chatSub = supabase
+            .channel('ticket-replies-live')
+            .on('postgres_changes', 
+                { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'ticket_replies'
+                }, 
+                (payload: any) => {
+                    // Mesaj bu bilete mi ait? (JS Seviyesinde Filtreleme - En Garanti Yol)
+                    if (selectedTicket && payload.new.ticket_id === selectedTicket.id) {
+                        fetchReplies(selectedTicket.id)
+                    }
+                }
+            )
+            .subscribe()
+
+        return () => { 
+            supabase.removeChannel(ticketSub); 
+            supabase.removeChannel(notifSub); 
+            supabase.removeChannel(chatSub);
+        }
+    }, [userId, selectedTicket?.id])
 
     const fetchProfile = async () => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -152,7 +197,8 @@ export default function UserDashboard() {
         if (!device) return alert('Lütfen makine seçin.')
         if (device.status !== 'online') return alert('Bu makine şu anda hizmet veremiyor.')
         
-        // Cihaz çevrimdışı kontrolü (5 dakikadan eski ping)
+        // Cihaz çevrimdışı kontrolü (Şimdilik devre dışı bırakıldı - Heartbeat senkronizasyonu için)
+        /*
         if (device.last_seen) {
             const lastSeenDate = new Date(device.last_seen);
             const now = new Date();
@@ -160,9 +206,20 @@ export default function UserDashboard() {
                 return alert('Makine ile bağlantı kurulamıyor. Makine kapalı veya interneti kesik olabilir.');
             }
         }
+        */
 
         const finalPrice = qrDynamicAmount || device.hizmet_fiyati || 50
         if (balance < finalPrice) return alert('Bakiye yetersiz!')
+        
+        // ── KONUM KONTROLÜ (YENİ) ──
+        if (userLocation && device.latitude && device.longitude) {
+            const distance = calculateDistance(userLocation[0], userLocation[1], device.latitude, device.longitude);
+            if (distance > 0.1) { // 100 metre sınırı
+                return alert(`Makineye çok uzaktasınız (${distance} km). İşlem başlatabilmek için makinenin yanında (en fazla 100m) olmalısınız.`);
+            }
+        }
+
+        if (paymentProcessing) return; // Çift tıklama koruması
         
         setPaymentProcessing('processing')
         try {
@@ -177,7 +234,7 @@ export default function UserDashboard() {
             const { data: cmdData, error: cmdError } = await supabase.from('device_commands').insert({
                 device_id: device.id,
                 command: 'START_WASH',
-                payload: { perfume: qrWantsPerfume, amount: finalPrice, perfume_price: (device.parfum_fiyati || 5) }
+                payload: { perfume: qrWantsPerfume, amount: finalPrice, perfume_price: 0 }
             }).select();
 
             if (cmdError) throw cmdError;
@@ -186,39 +243,57 @@ export default function UserDashboard() {
             setPaymentProcessing('connecting');
             
             const handshakeResult = await new Promise((resolve) => {
-                let timeoutId = setTimeout(() => {
-                    resolve('timeout');
-                }, 45000); // 45 saniye bekle (daha güvenli)
+                let isResolved = false;
+                
+                let pollingInterval: any;
+                const safeResolve = (val: string) => {
+                    if (isResolved) return;
+                    isResolved = true;
+                    clearTimeout(timeoutId);
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    resolve(val);
+                };
 
-                // 1. Cihaz durumunu dinle
-                supabase.channel('device_status_' + device.id)
-                    .on('postgres_changes', { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'devices' 
-                    }, (payload) => {
-                        if (payload.new.id === device.id) {
-                            const ws = payload.new.work_status;
-                            if (ws && ws !== 'idle') {
-                                clearTimeout(timeoutId);
-                                resolve('success');
-                            }
+                let timeoutId = setTimeout(() => {
+                    safeResolve('timeout');
+                }, 45000); // 45 saniye bekle
+
+                // 1. POLLING (GARANTI YONTEM): Her 2 saniyede bir manuel kontrol et
+                pollingInterval = setInterval(async () => {
+                    const { data: checkData } = await supabase
+                        .from('device_commands')
+                        .select('status, executed_at')
+                        .eq('id', cmdData?.[0]?.id)
+                        .single();
+                    
+                    if (checkData && (checkData.executed_at || checkData.status === 'processing' || checkData.status === 'completed')) {
+                        console.log('[Handshake] Polling ile basari tespit edildi!');
+                        safeResolve('success');
+                    }
+                    
+                    // Ayrica cihazın work_status durumuna da bak
+                    const { data: devCheck } = await supabase
+                        .from('devices')
+                        .select('work_status')
+                        .eq('id', device.id)
+                        .single();
+                    
+                    if (devCheck && devCheck.work_status && devCheck.work_status !== 'idle') {
+                        console.log('[Handshake] Polling ile cihaz durumu degisimi tespit edildi!');
+                        safeResolve('success');
+                    }
+                }, 2000);
+
+                // 2. REALTIME (HIZLI YONTEM): Degisiklik geldigi an yakala
+                supabase.channel('handshake_' + device.id)
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'devices', filter: `id=eq.${device.id}` }, (payload) => {
+                        if (payload.new.work_status && payload.new.work_status !== 'idle') {
+                            safeResolve('success');
                         }
                     })
-                    .subscribe();
-
-                // 2. Komut durumunu dinle (Makine komutu aldığı an tetiklenir)
-                supabase.channel('cmd_status_' + (cmdData?.[0]?.id || 'unknown'))
-                    .on('postgres_changes', { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'device_commands' 
-                    }, (payload) => {
-                        if (payload.new.id === cmdData?.[0]?.id) {
-                            if (payload.new.executed_at || payload.new.status === 'processing' || payload.new.status === 'completed') {
-                                clearTimeout(timeoutId);
-                                resolve('success');
-                            }
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'device_commands', filter: `id=eq.${cmdData?.[0]?.id}` }, (payload) => {
+                        if (payload.new.executed_at || payload.new.status === 'processing' || payload.new.status === 'completed') {
+                            safeResolve('success');
                         }
                     })
                     .subscribe();
@@ -262,8 +337,25 @@ export default function UserDashboard() {
     const handleSendReply = async () => {
         if (!chatInput || !selectedTicket) return
         const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('ticket_replies').insert({ ticket_id: selectedTicket.id, user_id: user?.id, message: chatInput, is_admin: false })
-        if (!error) { setChatInput(''); fetchReplies(selectedTicket.id) }
+        
+        try {
+            // 1. Yanıtı ekle
+            const { error: replyError } = await supabase.from('ticket_replies').insert({ 
+                ticket_id: selectedTicket.id, 
+                user_id: user?.id, 
+                message: chatInput, 
+                is_admin: false 
+            })
+            if (replyError) throw replyError
+
+            // 2. Bileti tekrar 'open' durumuna getir (Admin görsün diye)
+            await supabase.from('tickets').update({ status: 'open' }).eq('id', selectedTicket.id)
+            
+            setChatInput('')
+            fetchReplies(selectedTicket.id)
+        } catch (err: any) {
+            alert('Mesaj gönderilemedi: ' + err.message)
+        }
     }
 
     const handlePasswordChange = async (e: React.FormEvent) => {
@@ -297,8 +389,23 @@ export default function UserDashboard() {
     }
 
     const markAllAsRead = async () => {
+        if (!userId || notifications.length === 0) return
+        
+        // 1. Local state guncelle
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
-        await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false)
+        
+        // 2. Kisisel bildirimleri guncelle
+        const personalIds = notifications.filter(n => n.user_id && !n.is_read).map(n => n.id)
+        if (personalIds.length > 0) {
+            await supabase.from('notifications').update({ is_read: true }).in('id', personalIds)
+        }
+        
+        // 3. Genel bildirimleri notification_reads'e ekle
+        const globalIds = notifications.filter(n => !n.user_id && !n.is_read).map(n => n.id)
+        if (globalIds.length > 0) {
+            const readInserts = globalIds.map(id => ({ user_id: userId, notification_id: id }))
+            await supabase.from('notification_reads').upsert(readInserts, { onConflict: 'user_id,notification_id' })
+        }
     }
 
     return (
@@ -348,21 +455,55 @@ export default function UserDashboard() {
 
                 {/* QR Payment - Home Tab */}
                 {activeTab === 'home' && (
-                    <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center py-10">
-                        <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-5 shadow-inner">
-                            <QrCode className="w-10 h-10" />
+                    <div className="space-y-6">
+                        <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center py-10">
+                            <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                                <QrCode className="w-10 h-10" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR Ödeme</h3>
+                            <p className="text-slate-500 text-center text-sm mb-6 max-w-xs leading-relaxed">
+                                Kask otomatinin üzerindeki QR kodu okutun veya makine kodunu girerek ödemenizi yapın.
+                            </p>
+                            <button
+                                onClick={() => setShowQrModal(true)}
+                                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                            >
+                                <QrCode className="w-5 h-5" />
+                                Kod Girerek Öde
+                            </button>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">QR Ödeme</h3>
-                        <p className="text-slate-500 text-center text-sm mb-6 max-w-xs leading-relaxed">
-                            Kask otomatinin üzerindeki QR kodu okutun veya makine kodunu girerek ödemenizi yapın.
-                        </p>
-                        <button
-                            onClick={() => setShowQrModal(true)}
-                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
-                        >
-                            <QrCode className="w-5 h-5" />
-                            Kod Girerek Öde
-                        </button>
+
+                        {/* Near Kiosks List */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center px-2">
+                                <h3 className="font-bold text-slate-800 flex items-center gap-2"><MapPin className="w-4 h-4 text-indigo-600" /> Yakınımdaki Cihazlar</h3>
+                                <button onClick={() => setActiveTab('map')} className="text-xs font-bold text-indigo-600">Haritada Gör</button>
+                            </div>
+                            <div className="space-y-3">
+                                {kiosks.sort((a, b) => a.distance - b.distance).slice(0, 3).map(kiosk => (
+                                    <div key={kiosk.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-slate-800 truncate">{kiosk.name}</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{kiosk.distance} KM UZAKLIKTA</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${kiosk.lat},${kiosk.lng}`, '_blank')}
+                                                className="p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                            >
+                                                <MapPin className="w-5 h-5" />
+                                            </button>
+                                            <button 
+                                                onClick={() => { setQrDeviceId(kiosk.id); setShowQrModal(true); setPaymentConfirmDevice(devices.find(d => d.id === kiosk.id) || null) }}
+                                                className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-200"
+                                            >
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </main>
@@ -404,26 +545,6 @@ export default function UserDashboard() {
                                 }}
                                 onClose={() => { setShowQrModal(false); setShowCameraScanner(false) }}
                             />
-                            <div className="relative flex items-center gap-3">
-                                <div className="flex-1 h-px bg-slate-200" />
-                                <span className="text-xs text-slate-400 font-bold">or</span>
-                                <div className="flex-1 h-px bg-slate-200" />
-                            </div>
-                            {/* Manual fallback */}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Manuel Makine Sec</label>
-                                <select className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium text-sm"
-                                    value={qrDeviceId}
-                                    onChange={(e) => {
-                                        const d = devices.find(dev => dev.id === e.target.value)
-                                        if (d) setPaymentConfirmDevice(d)
-                                    }}>
-                                    <option value="">Secim yapın...</option>
-                                    {devices.filter(d => d.status === 'online').map(d => (
-                                        <option key={d.id} value={d.id}>{d.name}</option>
-                                    ))}
-                                </select>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -445,9 +566,14 @@ export default function UserDashboard() {
                             </div>
                             <div className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Hizmet Ucreti {qrWantsPerfume ? '(Parfümlü)' : ''}</span>
+                                    <span className="text-slate-500">Hizmet Ucreti {qrWantsPerfume ? '(Parfüm Dahil)' : ''}</span>
                                     <span className="font-black text-slate-800">{qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50} TL</span>
                                 </div>
+                                {qrWantsPerfume && (
+                                    <p className="text-[10px] text-amber-600 font-bold bg-amber-50 p-1.5 rounded-lg border border-amber-100">
+                                        ⚠️ Alerjiniz veya koku hassasiyetiniz varsa parfümü iptal edebilirsiniz.
+                                    </p>
+                                )}
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-500">Mevcut Bakiye</span>
                                     <span className={"font-bold " + (balance >= (qrDynamicAmount || paymentConfirmDevice.hizmet_fiyati || 50) ? 'text-emerald-600' : 'text-red-500')}>{balance} TL</span>
@@ -494,7 +620,7 @@ export default function UserDashboard() {
                             <>
                                 <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-2 shrink-0">
                                     <button onClick={() => setSettingsTab('account')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'account' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Profil Ayarları</button>
-                                    <button onClick={() => setSettingsTab('support')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'support' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Destek</button>
+                                    <button onClick={() => setSettingsTab('support')} className={'pb-2 text-sm font-bold ' + (settingsTab === 'support' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400')}>Destek Kayıtları</button>
                                 </div>
                                 {settingsTab === 'account' ? (
                                     <div className="space-y-4">
@@ -505,13 +631,27 @@ export default function UserDashboard() {
                                                 <button onClick={async () => { const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', userId); if (!error) alert('Profil güncellendi') }} className="bg-indigo-600 text-white p-3 rounded-xl active:scale-95"><Check className="w-5 h-5" /></button>
                                             </div>
                                         </div>
-                                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                                            <label className="text-xs font-bold text-slate-400 uppercase block">Şifre Değiştir</label>
-                                            <form onSubmit={handlePasswordChange} className="space-y-2">
-                                                <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="Eski şifre" required />
-                                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni şifre (min 6 karakter)" required />
-                                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="Yeni şifre tekrar" required />
-                                                <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold active:scale-95 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Şifreyi Güncelle</button>
+                                        <div className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Sliders className="w-4 h-4" /></div>
+                                                <h4 className="font-bold text-slate-800">Şifre Değiştir</h4>
+                                            </div>
+                                            <form onSubmit={handlePasswordChange} className="space-y-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Eski Şifre</label>
+                                                    <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className="modern-input w-full" placeholder="••••••••" required />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Yeni Şifre</label>
+                                                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="modern-input w-full" placeholder="En az 6 karakter" required />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Yeni Şifre Tekrar</label>
+                                                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="modern-input w-full" placeholder="••••••••" required />
+                                                </div>
+                                                <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 shadow-lg shadow-slate-200 mt-2 flex items-center justify-center gap-2">
+                                                    <Check className="w-5 h-5" /> Şifreyi Güncelle
+                                                </button>
                                             </form>
                                         </div>
                                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -528,14 +668,14 @@ export default function UserDashboard() {
                                         <form onSubmit={handleCreateTicket} className="space-y-3">
                                             <input value={ticketSubject} onChange={e => setTicketSubject(e.target.value)} placeholder="Konu" className="modern-input" required />
                                             <textarea value={ticketMessage} onChange={e => setTicketMessage(e.target.value)} placeholder="Mesajınız..." className="modern-input" rows={3} required />
-                                            <button type="submit" className="btn-primary w-full bg-emerald-500">Talep Gönder</button>
+                                            <button type="submit" className="btn-primary w-full bg-emerald-500">Destek Kaydı Oluştur</button>
                                         </form>
                                         <div className="space-y-3">
                                             {tickets.map(ticket => (
                                                 <div key={ticket.id} onClick={() => { setSelectedTicket(ticket); fetchReplies(ticket.id) }} className="p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 active:scale-95 transition-all">
                                                     <div className="flex justify-between mb-1">
                                                         <span className="font-bold text-slate-700 text-sm">{ticket.subject}</span>
-                                                        <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full ' + (ticket.status === 'open' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600')}>{ticket.status}</span>
+                                                        <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full ' + (ticket.status === 'open' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600')}>{ticket.status === 'open' ? 'Açık' : 'Çözüldü'}</span>
                                                     </div>
                                                     <p className="text-xs text-slate-500 truncate">{ticket.message}</p>
                                                 </div>
@@ -631,8 +771,8 @@ export default function UserDashboard() {
                         <span className="text-[10px] font-medium">Cüzdanım</span>
                     </button>
                     <button onClick={() => { setShowSettings(true); setSettingsTab('account') }} className="flex flex-col items-center gap-1 p-2 flex-1 text-slate-400 hover:text-indigo-600 transition-colors">
-                        <User className="w-6 h-6" />
-                        <span className="text-[10px] font-medium">Profil</span>
+                        <Settings className="w-6 h-6" />
+                        <span className="text-[10px] font-medium">Ayarlar</span>
                     </button>
                 </div>
             </div>
