@@ -1128,7 +1128,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="h-48 rounded-2xl overflow-hidden border border-slate-100 shadow-inner relative group">
                                         <AddKioskMap 
-                                            userLocation={adminLocation} 
+                                            userLocation={adminLocation || [41.0082, 28.9784]} 
                                             onLocationSelect={(lat, lng) => setNewKioskLocation([lat, lng])} 
                                             initialLocation={newKioskLocation}
                                             otherKiosks={devices.filter(d => d.id !== editingDevice?.id)}
