@@ -49,10 +49,10 @@ export default function Register() {
         })
 
         if (signUpError) {
-            const msg = signUpError.message.toLowerCase()
-            // 504 / timeout: kullanici olusturuldu ama mail gonderimi zaman asimina ugradi
-            // Kayit gercekte basarili, sadece mail gecikmeli gelecek
-            if (msg.includes('timeout') || msg.includes('504') || msg.includes('processing this request')) {
+            const msg = (signUpError.message || '').toLowerCase()
+            // 504 / timeout veya bos hata: kullanici olusturuldu ama mail gonderimi zaman asimina ugradi
+            // signUpError bos gelirse ({}) bu da timeout anlamina gelir
+            if (!signUpError.message || msg.includes('timeout') || msg.includes('504') || msg.includes('processing this request')) {
                 setSuccess(true)
                 setLoading(false)
                 return
