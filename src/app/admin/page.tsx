@@ -113,6 +113,7 @@ export default function AdminDashboard() {
     const [bulkTimeDry, setBulkTimeDry] = useState('30')
     const [bulkTimePerfume, setBulkTimePerfume] = useState('3')
     const [bulkTimeFinish, setBulkTimeFinish] = useState('5')
+    const [bulkUpdateType, setBulkUpdateType] = useState<'fixed' | 'percentage' | 'add' | 'subtract'>('fixed')
 
     // Uygulama Güncelleme (APK) State'leri
     const [appReleases, setAppReleases] = useState<any[]>([])
@@ -1386,6 +1387,62 @@ export default function AdminDashboard() {
                         <div className="mt-8 flex gap-3">
                             <button onClick={() => setShowNotifModal(false)} className="flex-1 py-4 bg-slate-50 text-slate-600 font-bold rounded-2xl hover:bg-slate-100 transition-all">Vazgeç</button>
                             <button onClick={handleSendNotification} className="flex-[2] py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-slate-800 active:scale-95 transition-all">Gönder</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showBulkUpdateModal && (
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowBulkUpdateModal(false)} />
+                    <div className="bg-white w-full max-w-md rounded-3xl p-6 relative z-10 shadow-2xl">
+                        <div className="flex justify-between items-center mb-5">
+                            <h3 className="font-black text-xl text-slate-800">Toplu Fiyat Güncelle</h3>
+                            <button onClick={() => setShowBulkUpdateModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5" /></button>
+                        </div>
+                        
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 block mb-1">İşlem Türü</label>
+                                <select value={bulkUpdateType} onChange={e => setBulkUpdateType(e.target.value as any)} className="modern-input">
+                                    <option value="fixed">Sabit Fiyat Yap</option>
+                                    <option value="add">Üzerine Ekle (TL)</option>
+                                    <option value="subtract">Fiyattan Düş (TL)</option>
+                                    <option value="percentage">Yüzde Artır (%)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 block mb-1">Değer</label>
+                                <input type="number" value={bulkUpdateValue} onChange={e => setBulkUpdateValue(e.target.value)} className="modern-input" placeholder="Örn: 10" />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowBulkUpdateModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">İptal</button>
+                            <button onClick={handleBulkUpdate} className="flex-1 py-3 bg-brand-primary text-white font-bold rounded-xl hover:opacity-90 shadow-lg">Uygula</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showBulkVideoModal && (
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowBulkVideoModal(false)} />
+                    <div className="bg-white w-full max-w-md rounded-3xl p-6 relative z-10 shadow-2xl">
+                        <div className="flex justify-between items-center mb-5">
+                            <h3 className="font-black text-xl text-slate-800">Toplu Video Güncelle</h3>
+                            <button onClick={() => setShowBulkVideoModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5" /></button>
+                        </div>
+                        <p className="text-sm text-slate-500 mb-6">Tüm cihazlardaki reklam videosunu tek seferde değiştirin.</p>
+                        
+                        <div className="mb-6">
+                            <label className="text-xs font-bold text-slate-500 block mb-1">Yeni Video URL</label>
+                            <input type="text" value={bulkVideoUrl} onChange={e => setBulkVideoUrl(e.target.value)} className="modern-input" placeholder="https://..." />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowBulkVideoModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">İptal</button>
+                            <button onClick={handleBulkVideoUpdate} className="flex-1 py-3 bg-brand-primary text-white font-bold rounded-xl hover:opacity-90 shadow-lg">Tümüne Uygula</button>
                         </div>
                     </div>
                 </div>
