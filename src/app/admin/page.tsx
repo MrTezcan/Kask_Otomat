@@ -104,6 +104,15 @@ export default function AdminDashboard() {
     const [now, setNow] = useState(new Date())
     const [adminLocation, setAdminLocation] = useState<[number, number] | null>(null)
     const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false)
+    const [bulkUpdateValue, setBulkUpdateValue] = useState('')
+    const [showBulkVideoModal, setShowBulkVideoModal] = useState(false)
+    const [bulkVideoUrl, setBulkVideoUrl] = useState('')
+    const [showBulkTimingModal, setShowBulkTimingModal] = useState(false)
+    const [bulkTimeLock, setBulkTimeLock] = useState('2')
+    const [bulkTimeWash, setBulkTimeWash] = useState('15')
+    const [bulkTimeDry, setBulkTimeDry] = useState('30')
+    const [bulkTimePerfume, setBulkTimePerfume] = useState('3')
+    const [bulkTimeFinish, setBulkTimeFinish] = useState('5')
 
     // Uygulama Güncelleme (APK) State'leri
     const [appReleases, setAppReleases] = useState<any[]>([])
